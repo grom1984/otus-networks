@@ -104,7 +104,6 @@ Fa0/4       desirable    802.1q         trunking      1
 S1#conf t
 Enter configuration commands, one per line.  End with CNTL/Z.
 S1(config)#int fa0/1
-S1(config-if)#swi
 S1(config-if)#switchport mode trunk 
 S1(config-if)#exit
 ```
