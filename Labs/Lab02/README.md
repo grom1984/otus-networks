@@ -45,12 +45,7 @@ Maximum VLANs supported locally : 250
 Number of existing VLANs        : 5
 VTP Operating Mode              : Server
 VTP Domain Name                 : CCNA
-VTP Pruning Mode                : Disabled
-VTP V2 Mode                     : Disabled
-VTP Traps Generation            : Disabled
-MD5 digest                      : 0x8B 0x58 0x3D 0x9D 0x64 0xBE 0xD5 0xF6 
-Configuration last modified by 0.0.0.0 at 0-0-00 00:00:00
-Local updater ID is 0.0.0.0 (no valid interface found)
+
 ```
 
 Настройка S1 и S3 клиентами VTP
@@ -72,23 +67,18 @@ Maximum VLANs supported locally : 250
 Number of existing VLANs        : 5
 VTP Operating Mode              : Client
 VTP Domain Name                 : CCNA
-VTP Pruning Mode                : Disabled
-VTP V2 Mode                     : Disabled
-VTP Traps Generation            : Disabled
-MD5 digest                      : 0x8B 0x58 0x3D 0x9D 0x64 0xBE 0xD5 0xF6 
-Configuration last modified by 0.0.0.0 at 0-0-00 00:00:00
 ```
 
 #### Часть 2: Настройка динамического протокола транкинга (DTP)
 
 *Шаг 1.Настроить динамические магистральные каналы S1 <-> S2*
 ``` bash
-S1#sh int f0/3 switch
+S1#sh int fa0/3 switch
 ---
 Administrative Mode: dynamic auto
 Operational Mode: trunk
 
-S2#sh int f0/3 switch
+S2#sh int fa0/3 switch
 ---   
 Administrative Mode: dynamic desirable
 Operational Mode: trunk
@@ -115,7 +105,6 @@ S1#conf t
 Enter configuration commands, one per line.  End with CNTL/Z.
 S1(config)#int fa0/1
 S1(config-if)#swi
-S1(config-if)#switchport mode tr
 S1(config-if)#switchport mode trunk 
 S1(config-if)#exit
 ```
@@ -134,7 +123,6 @@ Fa0/4       auto             802.1q         trunking      1
 Настроить статический магистральный канал S3 <-> S1
 ``` bash
 S3(config)#int fa0/1
-S3(config-if)#swit
 S3(config-if)#switchport mode trunk
 S3(config-if)#exit
 ```
@@ -236,7 +224,6 @@ S1(config)#exit
 Шаг 1. Переводим S1 в VTP transparent
 ``` bash
 S1#conf t
-S1(config)#vtp mode trans
 S1(config)#vtp mode transparent 
 Setting device to VTP Transparent mode for VLANS.
 ```
