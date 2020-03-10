@@ -98,3 +98,19 @@ S1#copy running-config startup-config
 
 #### Часть 2. Выбор корневого моста
 
+*Шаг 1. Отключите все порты на коммутаторах.*
+
+Пример на S1. На S2, S3 аналогично.
+``` bash
+S1#conf t
+S1(config)#int range e0/0-3
+S1(config-if-range)#shut
+```
+*Шаг 2. Настройте подключенные порты в качестве транковых.*
+``` bash
+S1(config)#int range e0/0-3
+S1(config-if-range)#swit
+S1(config-if-range)#switchport trunk encapsulation dot1q
+S1(config-if-range)#switchport mode trunk
+S1(config-if-range)#
+```
