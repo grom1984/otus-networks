@@ -34,7 +34,7 @@ S3 | VLAN 1 | 192.168.1.3 | 255.255.255.0
 Пример для S1
 
 Отключить поиск DNS и присвоить имена устройствам в соответствии с топологией.
-``` cmd
+``` shell
 Switch(config)#hostname S1
 S1(config)#no ip domain-lookup
 S1(config)#exit
