@@ -25,9 +25,6 @@ PC-C | NIC | 192.168.10.3 | 255.255.255.0
 ### Решение:
 #### Часть 1. Настройка базовых параметров коммутатора
 
-
-#### Часть 1. Настройка базовых параметров коммутатора
-
  *Шаг 1. Создайте сеть согласно топологии.*
  
  Подключите устройства, как показано в топологии, и подсоедините необходимые кабели.
@@ -118,3 +115,301 @@ S1(config-if)#ip address 192.168.99.13 255.255.255.0
 *Шаг 4: Настройте компьютеры.
 Назначьте IP-адреса компьютерам в соответствии с таблицей адресации.*
 
+#### Часть 2. Настройка протокола PAgP
+
+Создать канал между S1 и S3. Настроить порты на S1 с использованием рекомендуемого режима (desirable),
+а порты на S3 — с использованием автоматического режима (auto). Включить порты после настройки режимов PAgP.
+
+Настройка S1:
+``` bash
+S1#conf t
+S1(config)#interface range e0/2-3
+S1(config-if-range)#channel-group 1 mode desirable
+Creating a port-channel interface Port-channel 1
+
+S1(config-if-range)#no shut
+```
+Настройка S3:
+``` bash
+S3#conf t
+S3(config)#interface range e0/2-3
+S3(config-if-range)#channel-group 1 mode auto
+Creating a port-channel interface Port-channel 1
+
+S3(config-if-range)#no shut
+```
+*Шаг 2. Проверить конфигурации на портах.*
+
+Проверка конфигурации на S1: 
+``` bash
+S1#sh run interface e0/2
+
+interface Ethernet0/2
+ channel-group 1 mode desirable
+end
+```
+``` bash
+S1#sh run interface e0/3
+
+interface Ethernet0/3
+ channel-group 1 mode desirable
+end
+```
+``` bash
+S1#sh int e0/2 switchport
+Administrative Mode: dynamic auto
+Operational Mode: static access (member of bundle Po1)
+```
+``` bash
+S1#sh int e0/3 switchport
+Administrative Mode: dynamic auto
+Operational Mode: static access (member of bundle Po1)
+```
+
+Проверка конфигурации на S3:
+
+``` bash
+S3#sh run interface e0/2
+interface Ethernet0/2
+ channel-group 1 mode auto
+```
+
+``` bash
+S3#sh run interface e0/3
+interface Ethernet0/3
+ channel-group 1 mode auto
+```
+
+``` bash
+S3#sh int e0/2 switch
+Administrative Mode: dynamic auto
+Operational Mode: static access (member of bundle Po1)
+```
+
+``` bash
+S3#sh int e0/3 switch
+Administrative Mode: dynamic auto
+Operational Mode: static access (member of bundle Po1)
+```
+*Шаг 3. Убедиться, что порты объединены.*
+
+Проверяем объединение портов в EtherChannel на S1:
+``` bash
+S1#show etherchannel summary
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+1      Po1(SU)         PAgP      Et0/2(P)    Et0/3(P)
+```
+Проверяем объединение портов в EtherChannel на S3:
+``` bash
+S3#sh etherchannel summary
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+1      Po1(SU)         PAgP      Et0/2(P)    Et0/3(P)
+```
+
+Что означают флаги «SU» и «P» в сводных данных по Ethernet?
+
+> Обозначение (SU) расшифровывается как:
+> 
+> S - флаг уровня Layer2,
+> 
+> U - in use (используется).
+
+*Шаг 4. Настройте транковые порты.*
+
+Настроить порты Po1 на S1 и S3 в качестве транковых и назначить их сети native VLAN 99.
+
+*Шаг 5. Убедиться в том, что порты настроены в качестве транковых.*
+- Какие команды включены в список для интерфейсов F0/3 и F0/4 на обоих коммутаторах? Сравните результаты с текущей конфигурацией для интерфейса Po1. Запишите наблюдения.
+
+``` bash
+S1# sh run interface Po1
+
+interface Port-channel1
+ switchport trunk native vlan 99
+end
+```
+``` bash
+S3# sh run interface Po1
+
+interface Port-channel1
+ switchport trunk native vlan 99
+end
+```
+``` bash
+S1#sh int Po1 switchport
+Name: Po1
+Switchport: Enabled
+Administrative Mode: dynamic auto
+Operational Mode: static access
+Administrative Trunking Encapsulation: negotiate
+Operational Trunking Encapsulation: native
+Negotiation of Trunking: On
+Access Mode VLAN: 1 (default)
+Trunking Native Mode VLAN: 99 (Management)
+Administrative Native VLAN tagging: enabled
+Voice VLAN: none
+Administrative private-vlan host-association: none
+Administrative private-vlan mapping: none
+Administrative private-vlan trunk native VLAN: none
+Administrative private-vlan trunk Native VLAN tagging: enabled
+Administrative private-vlan trunk encapsulation: dot1q
+Administrative private-vlan trunk normal VLANs: none
+Administrative private-vlan trunk associations: none
+Administrative private-vlan trunk mappings: none
+Operational private-vlan: none
+Trunking VLANs Enabled: ALL
+Pruning VLANs Enabled: 2-1001
+```
+
+``` bash
+S3#sh int Po1 switchport
+Name: Po1
+Switchport: Enabled
+Administrative Mode: dynamic auto
+Operational Mode: static access
+Administrative Trunking Encapsulation: negotiate
+Operational Trunking Encapsulation: native
+Negotiation of Trunking: On
+Access Mode VLAN: 1 (default)
+Trunking Native Mode VLAN: 99 (Management)
+Administrative Native VLAN tagging: enabled
+Voice VLAN: none
+Administrative private-vlan host-association: none
+Administrative private-vlan mapping: none
+Administrative private-vlan trunk native VLAN: none
+Administrative private-vlan trunk Native VLAN tagging: enabled
+Administrative private-vlan trunk encapsulation: dot1q
+Administrative private-vlan trunk normal VLANs: none
+Administrative private-vlan trunk associations: none
+Administrative private-vlan trunk mappings: none
+Operational private-vlan: none
+Trunking VLANs Enabled: ALL
+Pruning VLANs Enabled: 2-1001
+```
+- Выполните команды show interfaces trunk и show spanning-tree на S1 и S3. Какой транковый порт включен в список? Какая используется сеть native VLAN? Какой вывод можно сделать на основе выходных данных?
+
+``` bash
+S1#sh int Po1 trunk
+
+Port        Mode             Encapsulation  Status        Native vlan
+Po1         auto             negotiate      not-trunking  99
+
+Port        Vlans allowed on trunk
+Po1         1
+
+Port        Vlans allowed and active in management domain
+Po1         1
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Po1         1
+```
+``` bash
+S1#sh int Po1 trunk
+
+Port        Mode             Encapsulation  Status        Native vlan
+Po1         auto             negotiate      not-trunking  99
+
+Port        Vlans allowed on trunk
+Po1         1
+
+Port        Vlans allowed and active in management domain
+Po1         1
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Po1         1
+```
+``` bash
+S1#sh span
+
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     aabb.cc00.1000
+             This bridge is the root
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     aabb.cc00.1000
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  300 sec
+
+Interface           Role Sts Cost      Prio.Nbr Type
+------------------- ---- --- --------- -------- --------------------------------
+Po1                 Desg FWD 56        128.65   Shr
+
+
+
+VLAN0010
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32778
+             Address     aabb.cc00.1000
+             This bridge is the root
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32778  (priority 32768 sys-id-ext 10)
+             Address     aabb.cc00.1000
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  300 sec
+
+Interface           Role Sts Cost      Prio.Nbr Type
+------------------- ---- --- --------- -------- --------------------------------
+Et1/0               Desg FWD 100       128.5    Shr
+```
+``` bash
+S3#sh span
+
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     aabb.cc00.1000
+             Cost        56
+             Port        65 (Port-channel1)
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     aabb.cc00.3000
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  300 sec
+
+Interface           Role Sts Cost      Prio.Nbr Type
+------------------- ---- --- --------- -------- --------------------------------
+Po1                 Root FWD 56        128.65   Shr
+
+
+
+VLAN0010
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32778
+             Address     aabb.cc00.3000
+             This bridge is the root
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32778  (priority 32768 sys-id-ext 10)
+             Address     aabb.cc00.3000
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  300 sec
+
+Interface           Role Sts Cost      Prio.Nbr Type
+------------------- ---- --- --------- -------- --------------------------------
+Et1/3               Desg FWD 100       128.8    Shr
+```
+
+> Во широковещательном домене VLAN1 S1 остался корневым мостом, а во VLAN10 каждый из коммутаторов является корневым мостом, т.к. каждый из коммутаторов думает, что vlan10 есть только у него (анонс vlan10 по транку не настроен).
+
+- Какие значения стоимости и приоритета порта для агрегированного канала отображены в выходных данных команды show spanning-tree?
+  
+``` bash
+Interface           Role Sts Cost      Prio.Nbr Type
+------------------- ---- --- --------- -------- --------------------------------
+Po1                 Root FWD 56        128.65   Shr
+```
+``` bash
+Interface           Role Sts Cost      Prio.Nbr Type
+------------------- ---- --- --------- -------- --------------------------------
+Po1                 Desg FWD 56        128.65   Shr
+```
+#### Часть 3. Настройка протокола LACP
