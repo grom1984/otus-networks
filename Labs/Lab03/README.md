@@ -107,6 +107,8 @@ S1(config)#int range e0/0-3
 S1(config-if-range)#shut
 ```
 *Шаг 2. Настройте подключенные порты в качестве транковых.*
+
+Пример на S1. На S2, S3 аналогично.
 ``` bash
 S1(config)#int range e0/0-3
 S1(config-if-range)#swit
@@ -114,3 +116,129 @@ S1(config-if-range)#switchport trunk encapsulation dot1q
 S1(config-if-range)#switchport mode trunk
 S1(config-if-range)#
 ```
+*Шаг 3. Включите порты e0/1 и e0/3 на всех коммутаторах.*
+
+Пример на S1. На S2, S3 аналогично.
+``` bash
+S1#conf t
+S1(config)#int range e0/1,e0/3
+S1(config-if-range)#no shut
+```
+Проверка активации портов
+``` bash
+S1#sh int status
+```
+``` bash
+Port      Name               Status       Vlan       Duplex  Speed Type
+Et0/0                        disabled     1            auto   auto unknown
+Et0/1                        connected    trunk        auto   auto unknown
+Et0/2                        disabled     1            auto   auto unknown
+Et0/3                        connected    trunk        auto   auto unknown
+```
+*Шаг 4. Отобразите данные протокола spanning-tree.*
+
+Коммутатор S1
+``` bash
+S1#sh spann
+
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     aabb.cc00.1000
+             This bridge is the root
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     aabb.cc00.1000
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  300 sec
+
+Interface           Role Sts Cost      Prio.Nbr Type
+------------------- ---- --- --------- -------- --------------------------------
+Et0/1               Desg LIS 100       128.2    Shr
+Et0/3               Desg LIS 100       128.4    Shr
+```
+
+Коммутатор S2
+``` bash
+S2#sh spann
+
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     aabb.cc00.1000
+             Cost        100
+             Port        2 (Ethernet0/1)
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     aabb.cc00.2000
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  15  sec
+
+Interface           Role Sts Cost      Prio.Nbr Type
+------------------- ---- --- --------- -------- --------------------------------
+Et0/1               Root LRN 100       128.2    Shr
+Et0/3               Desg LRN 100       128.4    Shr
+```
+
+Коммутатор S3
+``` bash
+S3#sh spann
+
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     aabb.cc00.1000
+             Cost        100
+             Port        4 (Ethernet0/3)
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     aabb.cc00.3000
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  15  sec
+
+Interface           Role Sts Cost      Prio.Nbr Type
+------------------- ---- --- --------- -------- --------------------------------
+Et0/1               Altn BLK 100       128.2    Shr
+Et0/3               Root FWD 100       128.4    Shr
+```
+
+На схеме ниже записаны роли и состояние (Sts) активных портов на каждом коммутаторе в топологии.
+![](spanning-free.png)
+
+Ответы на вопросы:
+Какой коммутатор является корневым мостом?
+> корневым мостом является S1.
+
+Почему этот коммутатор был выбран протоколом spanning-tree в качестве корневого моста?
+> S1 был выбран корневым исходя из наименьшего значения MAC-адреса. Т.к.суммы значений priotity bridge + vlan id однаковы на всех коммутаторах, то сравниваются значения MAC-адресов и выбирается наименьший
+
+Какие порты на коммутаторе являются корневыми портами? 
+> Порты, которые подключены к вышестоящему коммутатору. В данном случае те, которые подключены к корневому мосту. Обозначаются Root Fwd (root forward).
+> 
+> На S2 - e0/1
+> 
+> На S3 - e0/3
+
+Какие порты на коммутаторе являются назначенными портами?
+> Порты, используемые для  пересылки данных, обозначаются Desg Fwd (designated forward)
+
+Какой порт отображается в качестве альтернативного и в настоящее время заблокирован?
+> Порт e0/1 коммутатора S3.
+
+Почему протокол spanning-tree выбрал этот порт в качестве невыделенного (заблокированного) порта?
+> После того, как выбран root bridge, S2 и S3 продолжут отправлять BPDU-пакеты от root bridge через все порты, кроме корневых (root fwd), изменив в них значения на свои:
+> - bringe id;
+> - port id;
+> - root path cost
+> 
+>Получив пакеты BPDU друг от друга, увидели в них одинаковые значения root bridge, коммутаторы поймут, что есть избыточность (петля) и нужно заблокировать один из портов.
+Далее, нужно выбрать на каком из коммутаторов блокировать порт. Выбор происходит по трём критериям:
+> - Наименьшего Root Path Cost.
+> - Наименьшего Bridge ID.
+> - Наименьшего Port ID.
+>
+>Побеждает S2, т.к. у него меньший bridge id, соответственно порт e0/1 у S3 перестаёт отправлять любые пакеты и переходит в режит прослушивания BPDU пакетов от S2, т.е. переходит в режим blocked.
+ 
