@@ -2,7 +2,7 @@
 # Лабораторная работа №4. Настройка EtherChannel.
 
 ### Топология
-![](network.png)
+![network](network.png)
 
 ### Таблица адресации
 
@@ -29,7 +29,7 @@ PC-C | NIC | 192.168.10.3 | 255.255.255.0
  
  Подключите устройства, как показано в топологии, и подсоедините необходимые кабели.
 
- ![](network-eve.png)
+ ![network-eve](network-eve.png)
 
 *Шаг 2. Выполните инициализацию и перезагрузку коммутаторов.*
 
@@ -434,5 +434,105 @@ Po1                 Desg FWD 56        128.65   Shr
 
 Выполнить настройку канала между S1 и S2 и канала между S2 и S3 с помощью протокола LACP. Кроме того, отдельные каналы необходимо настроить в качестве транковых, прежде чем они будут объединены в каналы EtherChannel.
 
-*Шаг 1. Настройте LACP между S1 и S2.*
+*Шаг 1. Настроить LACP между S1 и S2.*
+
+Настройка коммутатора S1. 
+``` bash
+S1#conf t
+S1(config)#interface range e0/0-1
+S1(config-if-range)#switchport trunk encapsulation dot1q
+S1(config-if-range)#switchport mode trunk
+S1(config-if-range)#switchport trunk native vlan 99
+S1(config-if-range)#channel-group 2 mode active
+S1(config-if-range)#no shutdown
+```
+
+*Шаг 2. Убедитесь, что порты объединены.
+
+Какой протокол использует Po2 для агрегирования каналов?
+
+[Ответ: используется протокол LACP]
+
+``` bash
+S2#sh int Po2
+Port-channel2 is up, line protocol is up (connected)
+
+Members in this channel: Et0/0 Et0/1
+```
+
+Какие порты агрегируются для образования Po2?
+[Ответ: используются порты E0/0 и E0/1]
+
+``` bash
+S2#sh etherchannel summary
+
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+2      Po2(SU)         LACP      Et0/0(P)    Et0/1(P)
+```
+
+*Шаг 3. Настройте LACP между S2 и S3.*
+
+Настроить канал между S2 и S3 как Po3, используя LACP как протокол агрегирования каналов.
+
+Настройка S2:
+``` bash
+S2(config)#int range e0/2-3
+S2(config-if-range)#switchport trunk encapsulation dot1q
+S2(config-if-range)#switchport mode trunk
+S2(config-if-range)#switchport trunk native vlan 99
+S2(config-if-range)#channel-group 3 mode active
+Creating a port-channel interface Port-channel 3
+
+S2(config-if-range)#no shutdown
+
+```
+```  bash
+S3(config)#int range e0/0-1
+S3(config-if-range)#switchport trunk encapsulation dot1q
+S3(config-if-range)#switchport mode trunk
+S3(config-if-range)#switchport trunk native vlan 99
+S3(config-if-range)#channel-group 3 mode active
+Creating a port-channel interface Port-channel 3
+
+S3(config-if-range)#no shutdown
+```
+Настройки S3:
+### проверка работы PAgP и LACP
+S1
+``` bash
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+1      Po1(SU)         PAgP      Et0/2(P)    Et0/3(P)
+2      Po2(SU)         LACP      Et0/0(P)    Et0/1(P)
+
+```
+S2
+``` bash
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+2      Po2(SD)         LACP      Et0/0(H)    Et0/1(w)
+3      Po3(SU)         LACP      Et0/2(P)    Et0/3(P)
+
+```
+S3
+``` bash
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+1      Po1(SU)         PAgP      Et0/2(P)    Et0/3(P)
+3      Po3(SU)         LACP      Et0/0(P)    Et0/1(P)
+
+```
+
+*Шаг 4. Проверка наличия сквозного соединения.*
+
+![ping_success](ping_success.png)
+
+#### Вопросы для повторения
+
+Что может препятствовать образованию каналов EtherChannel?
+> Отсутствие статического транка на портах. Несогласованность trunk-портов auto/desirable;
+> несогласованность режимов работы EtherChnnel:
+> Active/Passive [для LACP]
+> Auto/Desirable [для PAgP]
 
