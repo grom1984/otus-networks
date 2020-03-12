@@ -531,8 +531,12 @@ Group  Port-channel  Protocol    Ports
 #### Вопросы для повторения
 
 Что может препятствовать образованию каналов EtherChannel?
-> Отсутствие статического транка на портах. Несогласованность trunk-портов auto/desirable;
-> несогласованность режимов работы EtherChnnel:
-> Active/Passive [для LACP]
-> Auto/Desirable [для PAgP]
+
+> Ответ:
+> 1. Отсутствие статического транка на портах.
+> 2. Несогласованность trunk-портов auto/desirable;
+> 
+> 3. Несогласованность режимов работы EtherChannel:
+>     - Active/Passive [для LACP]
+>     - Auto/Desirable [для PAgP]
 
