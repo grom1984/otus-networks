@@ -26,15 +26,15 @@ PC-C | NIC | 192.168.10.3 | 255.255.255.0
 ### Решение:
 #### Часть 1. Настройка базовых параметров коммутатора
 
- *Шаг 1. Создайте сеть согласно топологии.*
+##### *Шаг 1. Создайте сеть согласно топологии.*
  
  Подключите устройства, как показано в топологии, и подсоедините необходимые кабели.
 
  ![network-eve](network-eve.png)
 
-*Шаг 2. Выполните инициализацию и перезагрузку коммутаторов.*
+##### *Шаг 2. Выполните инициализацию и перезагрузку коммутаторов.*
 
-*Шаг 3. Настройте базовые параметры каждого коммутатора.*
+##### *Шаг 3. Настройте базовые параметры каждого коммутатора.*
 
 - Отключите поиск DNS.
 - Настройте имя устройства в соответствии с топологией.
@@ -44,7 +44,9 @@ PC-C | NIC | 192.168.10.3 | 255.255.255.0
 - Настройте logging synchronous, чтобы предотвратить прерывание ввода команд сообщениями консоли.
 - Отключите все порты коммутатора, кроме портов, подключенных к компьютерам.
 
-Пример для коммутатора S1.
+<details>
+ <summary>Настройка коммутатора S1</summary>
+
 ``` bash
 Switch#conf t
 Switch(config)#no ip domain-lookup 
@@ -68,6 +70,9 @@ S1(config-if-range)#shut
 S1(config)#exit
 S1#wr
 ```
+</details>
+|
+
 Для S2 и S3 аналогично, кроме команды:
 ``` bash
 S1(config)#int range e0/0-3,e1/0-2
@@ -79,7 +84,9 @@ S1(config-if-range)#shut
 - Назначьте IP-адреса в соответствии с таблицей адресации.
 - Сохраните текущую конфигурацию в загрузочную конфигурацию.
 
-Настройки коммутатора S1.
+<details>
+ <summary>Настройка коммутатора S1.</summary>
+
 ``` bash
 S1#conf t
 S1(config)#no logging console
@@ -99,8 +106,10 @@ S1(config-if)#exit
 S1(config)#exit
 S1#wr
 ```
+</details>
+|
 
-Настройки коммутатора S2. Аналогично S1, разница:
+Настройки коммутатора S2 аналогичны S1, разница:
 ``` bash
 S1(config)#int e1/3
 S1(config-if)#switchport mode access
@@ -109,11 +118,11 @@ S1(config-if)#exit
 S1(config)#int vlan 99
 S1(config-if)#ip address 192.168.99.12 255.255.255.0
 ```
-Настройки коммутатора S3. Аналогично S2, разница:
+Настройки коммутатора S3 аналогичны S2, разница:
 ``` bash
 S1(config-if)#ip address 192.168.99.13 255.255.255.0
 ```
-*Шаг 4: Настройте компьютеры.
+##### *Шаг 4: Настройте компьютеры.
 Назначьте IP-адреса компьютерам в соответствии с таблицей адресации.*
 
 Настройка PC-A. Настройка PC-B и PC-C осуществляется также.
@@ -125,6 +134,7 @@ PC1 : 192.168.10.1 255.255.255.0
 
 #### Часть 2. Настройка протокола PAgP
 
+##### *Шаг 1:	Настройте PAgP на S1 и S3*
 Создать канал между S1 и S3. Настроить порты на S1 с использованием рекомендуемого режима (desirable),
 а порты на S3 — с использованием автоматического режима (auto). Включить порты после настройки режимов PAgP.
 
@@ -146,9 +156,11 @@ Creating a port-channel interface Port-channel 1
 
 S3(config-if-range)#no shut
 ```
-*Шаг 2. Проверить конфигурации на портах.*
+##### *Шаг 2. Проверить конфигурации на портах.*
 
-Проверка конфигурации на S1: 
+<details>
+ <summary>Проверка конфигурации на S1</summary>
+
 ``` bash
 S1#sh run interface e0/2
 
@@ -156,6 +168,7 @@ interface Ethernet0/2
  channel-group 1 mode desirable
 end
 ```
+
 ``` bash
 S1#sh run interface e0/3
 
@@ -163,18 +176,23 @@ interface Ethernet0/3
  channel-group 1 mode desirable
 end
 ```
+
 ``` bash
 S1#sh int e0/2 switchport
 Administrative Mode: dynamic auto
 Operational Mode: static access (member of bundle Po1)
 ```
+
 ``` bash
 S1#sh int e0/3 switchport
 Administrative Mode: dynamic auto
 Operational Mode: static access (member of bundle Po1)
-```
 
-Проверка конфигурации на S3:
+```
+</details>
+
+<details>
+ <summary>Проверка конфигурации на S3</summary>
 
 ``` bash
 S3#sh run interface e0/2
@@ -199,7 +217,9 @@ S3#sh int e0/3 switch
 Administrative Mode: dynamic auto
 Operational Mode: static access (member of bundle Po1)
 ```
-*Шаг 3. Убедиться, что порты объединены.*
+</details>
+
+##### *Шаг 3. Убедиться, что порты объединены.*
 
 Проверяем объединение портов в EtherChannel на S1:
 ``` bash
@@ -230,7 +250,7 @@ Group  Port-channel  Protocol    Ports
 >
 > P - bundled in port-channel
 > 
-*Шаг 4. Настройте транковые порты.*
+##### *Шаг 4. Настройте транковые порты.*
 
 Настроить порты Po1 на S1 и S3 в качестве транковых и назначить их сети native VLAN 99.
 
@@ -241,8 +261,11 @@ S1(config-if)# switchport mode trunk
 S1(config-if)# switchport trunk native vlan 99
 ```
 
-*Шаг 5. Убедиться в том, что порты настроены в качестве транковых.*
-- Какие команды включены в список для интерфейсов F0/3 и F0/4 на обоих коммутаторах? Сравните результаты с текущей конфигурацией для интерфейса Po1. Запишите наблюдения.
+##### *Шаг 5. Убедиться в том, что порты настроены в качестве транковых.*
+- Какие команды включены в список для интерфейсов e0/2 и e0/3 на обоих коммутаторах? Сравните результаты с текущей конфигурацией для интерфейса Po1. Запишите наблюдения.
+
+<details>
+ <summary>Вывод команд</summary>
 
 ``` bash
 S1# sh run interface Po1
@@ -251,6 +274,7 @@ interface Port-channel1
  switchport trunk native vlan 99
 end
 ```
+
 ``` bash
 S3# sh run interface Po1
 
@@ -309,7 +333,13 @@ Operational private-vlan: none
 Trunking VLANs Enabled: ALL
 Pruning VLANs Enabled: 2-1001
 ```
+</details>
+|
+
 - Выполните команды show interfaces trunk и show spanning-tree на S1 и S3. Какой транковый порт включен в список? Какая используется сеть native VLAN? Какой вывод можно сделать на основе выходных данных?
+
+<details>
+ <summary>Вывод команд show interfaces trunk и show spanning-tree на S1 и S3</summary>
 
 ``` bash
 S1#sh int Po1 trunk
@@ -327,7 +357,7 @@ Port        Vlans in spanning tree forwarding state and not pruned
 Po1         1
 ```
 ``` bash
-S1#sh int Po1 trunk
+S3#sh int Po1 trunk
 
 Port        Mode             Encapsulation  Status        Native vlan
 Po1         auto             negotiate      not-trunking  99
@@ -416,8 +446,10 @@ Interface           Role Sts Cost      Prio.Nbr Type
 ------------------- ---- --- --------- -------- --------------------------------
 Et1/3               Desg FWD 100       128.8    Shr
 ```
+</details>
 
-> Во широковещательном домене VLAN1 S1 остался корневым мостом, а во VLAN10 каждый из коммутаторов является корневым мостом, т.к. каждый из коммутаторов думает, что vlan10 есть только у него (анонс vlan10 по транку не настроен).
+|
+> В широковещательном домене VLAN1 S1 остался корневым мостом, а во VLAN10 каждый из коммутаторов является корневым мостом, т.к. каждый из коммутаторов думает, что vlan10 есть только у него (анонс vlan10 по транку не настроен).
 
 - Какие значения стоимости и приоритета порта для агрегированного канала отображены в выходных данных команды show spanning-tree?
   
@@ -435,7 +467,7 @@ Po1                 Desg FWD 56        128.65   Shr
 
 Выполнить настройку канала между S1 и S2 и канала между S2 и S3 с помощью протокола LACP. Кроме того, отдельные каналы необходимо настроить в качестве транковых, прежде чем они будут объединены в каналы EtherChannel.
 
-*Шаг 1. Настроить LACP между S1 и S2.*
+##### *Шаг 1. Настроить LACP между S1 и S2.*
 
 Настройка коммутатора S1. 
 ``` bash
@@ -448,7 +480,7 @@ S1(config-if-range)#channel-group 2 mode active
 S1(config-if-range)#no shutdown
 ```
 
-*Шаг 2. Убедитесь, что порты объединены.
+##### *Шаг 2. Убедитесь, что порты объединены.
 
 Какой протокол использует Po2 для агрегирования каналов?
 
@@ -472,11 +504,13 @@ Group  Port-channel  Protocol    Ports
 2      Po2(SU)         LACP      Et0/0(P)    Et0/1(P)
 ```
 
-*Шаг 3. Настройте LACP между S2 и S3.*
+##### *Шаг 3. Настройте LACP между S2 и S3.*
 
 Настроить канал между S2 и S3 как Po3, используя LACP как протокол агрегирования каналов.
 
-Настройка S2:
+<details>
+ <summary>Настройка S2</summary>
+
 ``` bash
 S2(config)#int range e0/2-3
 S2(config-if-range)#switchport trunk encapsulation dot1q
@@ -488,6 +522,11 @@ Creating a port-channel interface Port-channel 3
 S2(config-if-range)#no shutdown
 
 ```
+</details>
+
+<details>
+ <summary>Настройки S3</summary>
+
 ```  bash
 S3(config)#int range e0/0-1
 S3(config-if-range)#switchport trunk encapsulation dot1q
@@ -498,7 +537,8 @@ Creating a port-channel interface Port-channel 3
 
 S3(config-if-range)#no shutdown
 ```
-Настройки S3:
+</details>
+
 ### проверка работы PAgP и LACP
 S1
 ``` bash
@@ -525,7 +565,7 @@ Group  Port-channel  Protocol    Ports
 
 ```
 
-*Шаг 4. Проверка наличия сквозного соединения.*
+##### *Шаг 4. Проверка наличия сквозного соединения.*
 
 ![ping_success](ping_success.png)
 
