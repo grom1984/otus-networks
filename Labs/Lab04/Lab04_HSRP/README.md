@@ -19,45 +19,39 @@
     <td>G0/1</td>
     <td>192.168.1.1</td>
     <td>255.255.255.0</td>
-    <td> - </td>
+    <td rowspan="7"></td>
   </tr>
   <tr>
     <td>S0/0/0 (DCE)</td>
     <td>10.1.1.1</td>
     <td>255.255.255.252</td>
-    <td> - </td>
   </tr>
   <tr>
     <td rowspan="3">R2</td>
     <td>S0/0/0</td>
     <td>10.1.1.2</td>
     <td>255.255.255.252</td>
-    <td> - </td>
   </tr>
   <tr>
     <td>S0/0/1 (DCE)</td>
     <td>10.2.2.2</td>
     <td>255.255.255.252</td>
-    <td> - </td>
   </tr>
   <tr>
     <td>Lo1</td>
     <td>209.165.200.225</td>
     <td>255.255.255.224</td>
-    <td> - </td>
   </tr>
   <tr>
     <td rowspan="2">R3</td>
     <td>G0/1</td>
     <td>192.168.1.3</td>
     <td>255.255.255.0</td>
-    <td> - </td>
   </tr>
   <tr>
     <td>S0/0/1</td>
     <td>10.2.2.1</td>
     <td>255.255.255.252</td>
-    <td> - </td>
   </tr>
   <tr>
     <td>S1</td>
@@ -137,45 +131,39 @@
     <td>e0/0</td>
     <td>192.168.1.1</td>
     <td>255.255.255.0</td>
-    <td> - </td>
+    <td rowspan="7"></td>
   </tr>
   <tr>
     <td>S1/0 (DCE)</td>
     <td>10.1.1.1</td>
     <td>255.255.255.252</td>
-    <td> - </td>
   </tr>
   <tr>
     <td rowspan="3">R2</td>
     <td>S1/0</td>
     <td>10.1.1.2</td>
     <td>255.255.255.252</td>
-    <td> - </td>
   </tr>
   <tr>
     <td>S1/1 (DCE)</td>
     <td>10.2.2.2</td>
     <td>255.255.255.252</td>
-    <td> - </td>
   </tr>
   <tr>
     <td>Lo1</td>
     <td>209.165.200.225</td>
     <td>255.255.255.224</td>
-    <td> - </td>
   </tr>
   <tr>
     <td rowspan="2">R3</td>
     <td>e0/0</td>
     <td>192.168.1.3</td>
     <td>255.255.255.0</td>
-    <td> - </td>
   </tr>
   <tr>
     <td>S1/1</td>
     <td>10.2.2.1</td>
     <td>255.255.255.252</td>
-    <td> - </td>
   </tr>
   <tr>
     <td>S1</td>
