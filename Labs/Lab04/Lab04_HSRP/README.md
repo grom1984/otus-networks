@@ -278,9 +278,9 @@ R3#wr
 
 Если команды ping завершились неудачно и связь установить не удалось, исправьте ошибки в основных настройках устройства.
 
-*Шаг 7. Настройте маршрутизацию.*
+*Шаг 7. Настроить маршрутизацию.*
 
-a. Настройте RIP версии 2 на всех маршрутизаторах. Добавьте в процесс RIP все сети, кроме 209.165.200.224/27.
+a. Настроить RIP версии 2 на всех маршрутизаторах. Добавьте в процесс RIP все сети, кроме 209.165.200.224/27.
 
 Настройка R1:
 ``` bash
@@ -298,8 +298,16 @@ R2(config-router)#version 2
 R2(config-router)#network 10.1.1.2
 R2(config-router)#network 10.2.2.2
 ```
+Настройка R3:
+``` bash
+R3#conf t
+R3(config)#router rip
+R3(config-router)#version 2
+R3(config-router)#network 192.168.1.3
+R3(config-router)#network 10.2.2.1
+```
 
-b. Настройте маршрут по умолчанию на маршрутизаторе R2 с использованием Lo1 в качестве интерфейса выхода в сеть 209.165.200.224/27.
+b. Настроить маршрут по умолчанию на маршрутизаторе R2 с использованием Lo1 в качестве интерфейса выхода в сеть 209.165.200.224/27.
 ``` bash
 R2#conf t
 R2(config)#ip route 0.0.0.0 0.0.0.0 loopback1
@@ -324,3 +332,211 @@ b.	Необходимо получить ответ на ping-запросы с 
 
 > Ответ: Да, удалось получить ответы на запросы ping.
 ![](ping_gw_from_PC-C.png)
+
+#### Часть 2:	Настроить обеспечения избыточности на первом хопе с помощью HSRP
+
+*Шаг 1:	Определить путь интернет-трафика для PC-A и PC-C.*
+
+a. Определить путь трафика от PC-A до R2 (209.165.200.225):
+
+``` bash
+VPCS> trace 209.165.200.225
+trace to 209.165.200.225, 8 hops max, press Ctrl+C to stop
+ 1   192.168.1.1   0.342 ms  0.306 ms  0.236 ms
+ 2   *10.1.1.2   8.827 ms (ICMP type:3, code:3, Destination port unreachable)  *
+ ```
+ > Ответ: трафик от PC-A идёт по цепочке
+ 192.168.1.31 (PC-A) -> 192.168.1.1 (R1) -> 10.1.1.2 (R2) -> 209.165.200.225 (R2)
+
+b. Определить путь трафика от PC-C до R2 (209.165.200.225):
+
+``` bash
+VPCS> trace 209.165.200.225
+trace to 209.165.200.225, 8 hops max, press Ctrl+C to stop
+ 1   192.168.1.3   0.376 ms  0.234 ms  0.263 ms
+ 2   *10.2.2.2   5.123 ms (ICMP type:3, code:3, Destination port unreachable)  *
+```
+> Ответ: трафик от PC-C идёт по цепочке
+ 192.168.1.33 (PC-C) -> 192.168.1.3 (R3) -> 10.2.2.2 (R2) -> 209.165.200.225 (R2)
+
+ *Шаг 2:	Запустите сеанс эхо-тестирования на PC-A и разорвите соединение между S1 и R1.*
+
+ a. Запустить команду _ping 209.165.200.225 -t_ с компьютеров PC-A и PC-C.
+
+ b. Поочерёдно отключить интерфейсы e0/0 на коммутаторах S1 и S3.
+
+``` bash
+S1#conf t
+S1(config)#int e0/0
+S1(config-if)#no shut
+```
+Что произошло с трафиком эхо-запросов?
+> Ответ: ответы на эхо-зпросы прекратились на обоих ПК.
+
+с.Повторно активировать интерфейсы e0/0 на S1 и S3, соответственно. Повторно отправить эхо-запросы на 209.165.200.225 с компьютеров PC-A и PC-C, чтобы убедиться в том, что подключение восстановлено.
+
+> Ответ: подключение восстановлено. Ответы на эхо-запросы приходят.
+
+*Шаг 3:	Настройте HSRP на R1 и R3.*
+
+В этом шаге вам предстоит настроить HSRP и изменить адрес шлюза по умолчанию на компьютерах PC-A, PC-C, S1 и коммутаторе S2 на виртуальный IP-адрес для HSRP.
+
+**Изменённая таблица адресации**
+
+<table>
+  <tr>
+    <th>Устройство</th>
+    <th>Интерфейс</th>
+    <th>IP-адрес</th>
+    <th>Маска подсет</th>
+    <th>Шлюз по умолчанию</th>
+  </tr>
+  
+  <tr>
+    <td>S1</td>
+    <td>VLAN 1</td>
+    <td>192.168.1.11</td>
+    <td>255.255.255.0</td>
+    <td rowspan="4">192.168.1.254</td>
+  </tr>
+  <tr>
+    <td>S2</td>
+    <td>VLAN 1</td>
+    <td>192.168.1.13</td>
+    <td>255.255.255.0</td>
+    
+  </tr>
+  <tr>
+    <td>PC-A</td>
+    <td>NIC</td>
+    <td>192.168.1.31</td>
+    <td>255.255.255.0</td>
+  </tr>
+  <tr>
+    <td>PC-C</td>
+    <td>NIC</td>
+    <td>192.168.1.33</td>
+    <td>255.255.255.0</td>
+  </tr>
+</table>
+
+
+a.	Настройте протокол HSRP на маршрутизаторе R1 и R3.
+
+R1:
+``` bash
+R1(config)#interface e0/0
+R1(config-if)#standby version 2
+R1(config-if)#standby 1 ip 192.168.1.254
+R1(config-if)#standby 1 priority 150
+R1(config-if)#standby 1 preempt
+```
+R3:
+``` bash
+R3(config)#interface e0/0
+R3(config-if)#standby version 2
+R3(config-if)#standby 1 ip 192.168.1.254
+```
+c.	Проверьте HSRP, выполнив команду show standby на R1 и R3.
+
+R1:
+``` bash
+R1#sh standby
+Ethernet0/0 - Group 1 (version 2)
+  State is Active
+    2 state changes, last state change 00:12:01
+  Virtual IP address is 192.168.1.254
+  Active virtual MAC address is 0000.0c9f.f001
+    Local virtual MAC address is 0000.0c9f.f001 (v2 default)
+  Hello time 3 sec, hold time 10 sec
+    Next hello sent in 2.432 secs
+  Preemption enabled
+  Active router is local
+  Standby router is 192.168.1.3, priority 100 (expires in 10.608 sec)
+  Priority 150 (configured 150)
+  Group name is "hsrp-Et0/0-1" (default)
+
+```
+R3:
+``` bash
+R3#show standby
+Ethernet0/0 - Group 1 (version 2)
+  State is Standby
+    1 state change, last state change 00:05:17
+  Virtual IP address is 192.168.1.254
+  Active virtual MAC address is 0000.0c9f.f001
+    Local virtual MAC address is 0000.0c9f.f001 (v2 default)
+  Hello time 3 sec, hold time 10 sec
+    Next hello sent in 1.984 secs
+  Preemption disabled
+  Active router is 192.168.1.1, priority 150 (expires in 8.560 sec)
+    MAC address is aabb.cc00.1000
+  Standby router is local
+  Priority 100 (default 100)
+  Group name is "hsrp-Et0/0-1" (default)
+
+```
+
+#### Вопросы
+- Какой маршрутизатор является активным?
+> R1 - active \
+R3 - standby
+
+- Какой MAC-адрес используется для виртуального IP-адреса?
+>  0000.0c9f.f001
+
+- Какой IP-адрес и приоритет используются для резервного маршрутизатора?
+> Standby router is 192.168.1.3, priority 100
+
+d.	Использовать команду _show standby brief_ на R1 и R3, чтобы просмотреть сводку состояния HSRP.
+
+R1:
+``` bash
+R1#show standby brief
+                     P indicates configured to preempt.
+                     |
+Interface   Grp  Pri P State   Active          Standby         Virtual IP
+Et0/0       1    150 P Active  local           192.168.1.3     192.168.1.254
+```
+R3:
+``` bash
+R3#show standby brief
+                     P indicates configured to preempt.
+                     |
+Interface   Grp  Pri P State   Active          Standby         Virtual IP
+Et0/0       1    100   Standby 192.168.1.1     local           192.168.1.254
+```
+
+e.	Изменить адрес шлюза по умолчанию для PC-A, PC-C, S1 и S3 на 192.168.1.254.
+
+
+f.	Проверьте новые настройки. Отправьте эхо-запрос с PC-A и с PC-C на loopback-адрес маршрутизатора R2. Успешно ли выполнены эхо-запросы?
+> Да, успешно.
+
+Шаг 4:	Запустите сеанс эхо-тестирования на PC-A и разорвите соединение с коммутатором, подключенным к активному маршрутизатору HSRP (R1).
+
+<details>
+ <summary>Результат</summary>
+``` javaspript
+VPCS> ping 209.165.200.225 -t
+
+84 bytes from 209.165.200.225 icmp_seq=1 ttl=254 time=8.787 ms
+84 bytes from 209.165.200.225 icmp_seq=2 ttl=254 time=9.085 ms
+84 bytes from 209.165.200.225 icmp_seq=3 ttl=254 time=9.049 ms
+84 bytes from 209.165.200.225 icmp_seq=4 ttl=254 time=9.049 ms
+84 bytes from 209.165.200.225 icmp_seq=5 ttl=254 time=8.973 ms
+84 bytes from 209.165.200.225 icmp_seq=6 ttl=254 time=9.400 ms
+84 bytes from 209.165.200.225 icmp_seq=7 ttl=254 time=9.420 ms
+84 bytes from 209.165.200.225 icmp_seq=8 ttl=254 time=7.753 ms
+84 bytes from 209.165.200.225 icmp_seq=9 ttl=254 time=9.055 ms
+84 bytes from 209.165.200.225 icmp_seq=10 ttl=254 time=8.985 ms
+209.165.200.225 icmp_seq=11 timeout
+209.165.200.225 icmp_seq=12 timeout
+209.165.200.225 icmp_seq=13 timeout
+209.165.200.225 icmp_seq=14 timeout
+209.165.200.225 icmp_seq=15 timeout
+84 bytes from 209.165.200.225 icmp_seq=16 ttl=254 time=9.084 ms
+84 bytes from 209.165.200.225 icmp_seq=17 ttl=254 time=10.506 ms
+84 bytes from 209.165.200.225 icmp_seq=18 ttl=254 time=9.143 ms
+```
+</details>
