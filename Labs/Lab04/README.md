@@ -244,20 +244,22 @@ R3#wr
 
 Настройка PC-A
 ``` bash
-
-VPCS> ip 192.168.1.3/24 192.168.1.1
+VPCS> set pcname PC-A
+PC-A> ip 192.168.1.3/24 192.168.1.1
 Checking for duplicate address...
 PC1 : 192.168.1.3 255.255.255.0 gateway 192.168.1.1
 ```
 Настройка PC-B
 ``` bash
-VPCS> ip 192.168.2.3/24 192.168.2.1
+VPCS> set pcname PC-B
+PC-B> ip 192.168.2.3/24 192.168.2.1
 Checking for duplicate address...
 PC1 : 192.168.2.3 255.255.255.0 gateway 192.168.2.1
 ```
 Настройка PC-C
 ``` bash
-VPCS> ip 192.168.3.3/24 192.168.3.1
+VPCS> set pcname PC-C
+PC-C> ip 192.168.3.3/24 192.168.3.1
 Checking for duplicate address...
 PC1 : 192.168.3.3 255.255.255.0 gateway 192.168.3.1
 
@@ -602,3 +604,96 @@ Et0/0        1     0               192.168.3.1/24     10    DR    0/0
 Проверим наличие сквозного соединения.
 
 ![ping](ping.png)
+
+### Часть 3. Изменение назначенных идентификаторов маршрутизаторов
+
+Существует 3 способа назначения идентификатора:
+
+1. IP-адрес **router-id**
+2. IP-адрес **loopback**
+3. IP-адрес физического интерфейса.
+
+Чем выше значение ip-адреса, тем выше приоритет.
+
+##### *Шаг 1. Изменить идентификаторы loopback-интерфейсов.*
+
+Настроим значения loopback-интерфейсов маршрутизаторов R1, R2 и R3 на 1.1.1.1, 2.2.2.2 и 3.3.3.3 соответственно.*
+<details>
+ <summary>Пример настройки R1</summary>
+
+``` bash
+R1#conf t
+R1(config)#interface lo0
+R1(config-if)#ip address 1.1.1.1 255.255.255.255
+R1(config-if)#end
+```
+</details>
+
+<details>
+ <summary>Просмотр изменений идентификаторов </summary>
+
+``` bash
+R1#sh ip ospf nei
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+3.3.3.3           0   FULL/  -        00:00:35    192.168.13.2    Serial1/1
+2.2.2.2           0   FULL/  -        00:00:32    192.168.12.2    Serial1/0
+```
+</details>
+
+##### *Изменить идентификатор маршрутизаторов с помощью команды router-id.*
+
+Настроим значения router-id маршрутизаторов R1, R2 и R3 на 11.11.11.11, 22.22.22.22 и 33.33.33.33 соответственно.
+
+Пример для R1.
+
+``` bash
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#router ospf 1
+R1(config-router)#router-id 11.11.11.11
+% OSPF: Reload or use "clear ip ospf process" command, for this to take effect
+R1(config-router)#end
+R1#wr
+R1#reload
+```
+Идентификатор роутера изменился, т.к. приоритет router-id выше идентификатора loopbak.
+
+<details>
+ <summary>Смотрим идентификатор</summary>
+
+``` bash
+R1#show ip protocols
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "ospf 1"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 11.11.11.11
+  Number of areas in this router is 1. 1 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    192.168.1.0 0.0.0.255 area 0
+    192.168.12.0 0.0.0.3 area 0
+    192.168.13.0 0.0.0.3 area 0
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    33.33.33.33          110      00:00:04
+    22.22.22.22          110      00:00:04
+    3.3.3.3              110      00:10:01
+    2.2.2.2              110      00:10:01
+  Distance: (default is 110)
+
+```
+
+``` bash
+R1#show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+33.33.33.33       0   FULL/  -        00:00:34    192.168.13.2    Serial1/1
+22.22.22.22       0   FULL/  -        00:00:38    192.168.12.2    Serial1/0
+```
+</details>
+
+### Часть 4. Настройка пассивных интерфейсов OSPF
+
