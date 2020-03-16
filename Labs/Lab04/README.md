@@ -2,15 +2,16 @@
 # Лабораторная работа №4.
 
 ### Задание:
-#### Часть 1. [Создание сети и настройка основных параметров устройства](README.md#часть-1-создание-сети-и-настройка-основных-параметров-устройства-1)
+#### Часть 1. [Создание сети и настройка основных параметров устройства](README.md#часть-1-создание-сети-инастройка-основных-параметров-устройства-1)
 
-#### Часть 2. [Настройка и проверка маршрутизации OSPF](README.md#часть-2-настройка-и-проверка-маршрутизации-ospf-1)
+#### Часть 2. [Настройка и проверка маршрутизации OSPF](README.md#часть-2-настройка-ипроверка-маршрутизации-ospf-1)
 
 #### Часть 3. Изменение назначений идентификаторов маршрутизаторов
 
 #### Часть 4. Настройка пассивных интерфейсов OSPF
 
 #### Часть 5. Изменение метрик OSPF
+
 
 ### Решение:
 
@@ -345,11 +346,11 @@ R3#wr
 
 
 <details>
- <summary>Проверка на S1</summary>
+ <summary>Таблица маршрутизации и соседи R1</summary>
 
 ``` bash
 ```
-show ip ospf neighbor
+##### #show ip ospf neighbor
 ``` bash
 R1#show ip ospf neighbor
 
@@ -357,7 +358,7 @@ Neighbor ID     Pri   State           Dead Time   Address         Interface
 192.168.23.2      0   FULL/  -        00:00:35    192.168.13.2    Serial1/1
 192.168.23.1      0   FULL/  -        00:00:38    192.168.12.2    Serial1/0
 ```
-show ip route
+##### #show ip route
 ``` bash
 R1#show ip route
 
@@ -378,7 +379,7 @@ L        192.168.13.1/32 is directly connected, Serial1/1
 O        192.168.23.0 [110/128] via 192.168.13.2, 00:11:51, Serial1/1
                       [110/128] via 192.168.12.2, 00:16:13, Serial1/0
 ```
-show ip protocols
+##### #show ip protocols
 ``` bash
 R1#show ip protocols
 *** IP Routing is NSF aware ***
@@ -402,11 +403,11 @@ Routing Protocol is "ospf 1"
 </details>
 
 <details>
- <summary>Проверка на S2</summary>
+ <summary>Таблица маршрутизации и соседи R2</summary>
 
 ``` bash
 ```
-show ip ospf neighbor
+##### #show ip ospf neighbor
 ``` bash
 R2#show ip ospf neighbor
 
@@ -414,7 +415,7 @@ Neighbor ID     Pri   State           Dead Time   Address         Interface
 192.168.23.2      0   FULL/  -        00:00:37    192.168.23.2    Serial1/1
 192.168.13.1      0   FULL/  -        00:00:35    192.168.12.1    Serial1/0
 ```
-show ip route
+##### #show ip route
 ``` bash
 R2#show ip route
 
@@ -435,7 +436,7 @@ O        192.168.13.0 [110/128] via 192.168.23.2, 00:14:52, Serial1/1
 C        192.168.23.0/30 is directly connected, Serial1/1
 L        192.168.23.1/32 is directly connected, Serial1/1
 ```
-show ip protocols
+##### #show ip protocols
 ``` bash
 R2# show ip protocols
 *** IP Routing is NSF aware ***
@@ -459,9 +460,11 @@ Routing Protocol is "ospf 1"
 </details>
 
 <details>
- <summary>Проверка на S3</summary>
+ <summary>Таблица маршрутизации и соседи R3</summary>
 
-
+``` bash
+```
+##### #show ip ospf neighbor
 ``` bash
 R3#show ip ospf neighbor
 
@@ -469,6 +472,7 @@ Neighbor ID     Pri   State           Dead Time   Address         Interface
 192.168.23.1      0   FULL/  -        00:00:36    192.168.23.1    Serial1/1
 192.168.13.1      0   FULL/  -        00:00:37    192.168.13.1    Serial1/0
 ```
+##### #show ip route
 ``` bash
 R3#show ip route
 
@@ -489,7 +493,112 @@ L        192.168.13.2/32 is directly connected, Serial1/0
 C        192.168.23.0/30 is directly connected, Serial1/1
 L        192.168.23.2/32 is directly connected, Serial1/1
 ```
-show ip protocols
+##### #show ip protocols
 ``` bash
+R3#show ip protocols
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "ospf 1"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 192.168.23.2
+  Number of areas in this router is 1. 1 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    192.168.3.0 0.0.0.255 area 0
+    192.168.13.0 0.0.0.3 area 0
+    192.168.23.0 0.0.0.3 area 0
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    192.168.13.1         110      00:26:05
+    192.168.23.1         110      00:25:55
+  Distance: (default is 110)
 ```
 </details>
+
+Какую команду вы бы применили, чтобы просмотреть в таблице маршрутизации только маршруты OSPF?
+>Ответ: _show ip route ospf_
+
+Проверить данные процесса OSPF
+
+<details>
+ <summary>Процессы OSPF R1</summary>
+
+``` bash
+R1#show ip ospf
+ Routing Process "ospf 1" with ID 192.168.13.1
+ 
+    Area BACKBONE(0)
+        Number of interfaces in this area is 3
+        
+        SPF algorithm last executed 01:12:23.892 ago
+        
+```
+</details>
+
+<details>
+ <summary>Процессы OSPF R2</summary>
+
+``` bash
+R2#show ip ospf
+ Routing Process "ospf 1" with ID 192.168.23.1
+     Area BACKBONE(0)
+        Number of interfaces in this area is 3
+        SPF algorithm last executed 01:16:48.954 ago
+```
+</details>
+<details>
+ <summary>Процессы OSPF R3</summary>
+
+``` bash
+R3#show ip ospf
+ Routing Process "ospf 1" with ID 192.168.23.2
+ 
+    Area BACKBONE(0)
+        Number of interfaces in this area is 3
+        SPF algorithm last executed 01:21:25.001 ago
+```
+</details>
+
+Проверить параметры интерфейса OSPF
+
+<details>
+ <summary>Параметры интерфейсов OSPF R1</summary>
+
+``` bash
+R1#show ip ospf interface brief
+Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
+Se1/1        1     0               192.168.13.1/30    64    P2P   1/1
+Se1/0        1     0               192.168.12.1/30    64    P2P   1/1
+Et0/0        1     0               192.168.1.1/24     10    DR    0/0
+
+```
+</details>
+
+<details>
+ <summary>Параметры интерфейсов OSPF R2</summary>
+
+``` bash
+R2#show ip ospf interface brief
+Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
+Se1/1        1     0               192.168.23.1/30    64    P2P   1/1
+Se1/0        1     0               192.168.12.2/30    64    P2P   1/1
+Et0/0        1     0               192.168.2.1/24     10    DR    0/0
+```
+</details>
+
+<details>
+ <summary>Параметры интерфейсов OSPF R3</summary>
+
+``` bash
+R3#show ip ospf interface brief
+Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
+Se1/1        1     0               192.168.23.2/30    64    P2P   1/1
+Se1/0        1     0               192.168.13.2/30    64    P2P   1/1
+Et0/0        1     0               192.168.3.1/24     10    DR    0/0
+```
+</details>
+
+Проверим наличие сквозного соединения.
+
+![ping](ping.png)
