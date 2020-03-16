@@ -1,6 +1,22 @@
 # Настройка базового протокола OSPFv2 для одной области
 # Лабораторная работа №4.
 
+### Задание:
+#### Часть 1. [Создание сети и настройка основных параметров устройства](README.md#часть-1-создание-сети-и-настройка-основных-параметров-устройства-1)
+
+#### Часть 2. [Настройка и проверка маршрутизации OSPF](README.md#часть-2-настройка-и-проверка-маршрутизации-ospf-1)
+
+#### Часть 3. Изменение назначений идентификаторов маршрутизаторов
+
+#### Часть 4. Настройка пассивных интерфейсов OSPF
+
+#### Часть 5. Изменение метрик OSPF
+
+### Решение:
+
+### Часть 1. Создание сети и настройка основных параметров устройства
+
+Создали стенд в eve-ng согласно топологии.
 ### Топология
 ![network](network.png)
 
@@ -11,7 +27,7 @@
     <th>Устройство</th>
     <th>Интерфейс</th>
     <th>IP-адрес</th>
-    <th>Маска подсет</th>
+    <th>Маска подсети</th>
     <th>Шлюз по умолчанию</th>
   </tr>
   <tr>
@@ -86,24 +102,8 @@
   </tr>
 </table>
 
-
-### Задание:
-#### [Часть 1. Создание сети и настройка основных параметров устройства](README.md#часть-1-создание-сети-и-настройка-основных-параметров-устройства-1)
-
-#### Часть 2. Настройка и проверка маршрутизации OSPF
-
-#### Часть 3. Изменение назначений идентификаторов маршрутизаторов
-
-#### Часть 4. Настройка пассивных интерфейсов OSPF
-
-#### Часть 5. Изменение метрик OSPF
-
-### Решение:
-
-#### Часть 1. Создание сети и настройка основных параметров устройства
-
-Создали стенд в eve-ng согласно топологии.
 Произвели базовую настройку маршрутизаторов.
+
 <details>
  <summary>Настройка R1</summary>
 
@@ -287,5 +287,209 @@ R1>
 R2>ping 192.168.23.2
 
 Success rate is 100 percent (5/5), round-trip min/avg/max = 8/8/9 ms
+```
+</details>
+
+### Часть 2. Настройка и проверка маршрутизации OSPF
+
+Настроить протокол OSPF на маршрутизаторах.
+
+<details>
+ <summary>Настройка R1</summary>
+
+``` bash
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#router ospf 1
+R1(config-router)#network 192.168.1.0 0.0.0.255 area 0
+R1(config-router)#network 192.168.12.0 0.0.0.3 area 0
+R1(config-router)#network 192.168.13.0 0.0.0.3 area 0
+R1(config-router)#exit
+R1(config)#exit
+R1#wr
+```
+</details>
+<details>
+ <summary>Настройка R2</summary>
+
+``` bash
+R2#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R2(config)#router ospf 1
+R2(config-router)#network 192.168.2.0 0.0.0.255 area 0
+R2(config-router)#network 192.168.12.0 0.0.0.3 area 0
+R2(config-router)#network 192.168.23.0 0.0.0.3 area 0
+R2(config-router)#exit
+R2(config)#exit
+R2#wr
+```
+</details>
+
+<details>
+ <summary>Настройка R3</summary>
+
+``` bash
+R3#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R3(config)#router ospf 1
+R3(config-router)#network 192.168.3.0 0.0.0.255 area 0
+R3(config-router)#network 192.168.13.0 0.0.0.3 area 0
+R3(config-router)#network 192.168.23.0 0.0.0.3 area 0
+R3(config-router)#exit
+R3(config)#exit
+R3#wr
+```
+</details>
+
+Проверить информацию о соседних устройствах и маршрутизации OSPF.
+
+
+<details>
+ <summary>Проверка на S1</summary>
+
+``` bash
+```
+show ip ospf neighbor
+``` bash
+R1#show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+192.168.23.2      0   FULL/  -        00:00:35    192.168.13.2    Serial1/1
+192.168.23.1      0   FULL/  -        00:00:38    192.168.12.2    Serial1/0
+```
+show ip route
+``` bash
+R1#show ip route
+
+Gateway of last resort is not set
+
+      192.168.1.0/24 is variably subnetted, 2 subnets, 2 masks
+C        192.168.1.0/24 is directly connected, Ethernet0/0
+L        192.168.1.1/32 is directly connected, Ethernet0/0
+O     192.168.2.0/24 [110/74] via 192.168.12.2, 00:16:13, Serial1/0
+O     192.168.3.0/24 [110/74] via 192.168.13.2, 00:12:01, Serial1/1
+      192.168.12.0/24 is variably subnetted, 2 subnets, 2 masks
+C        192.168.12.0/30 is directly connected, Serial1/0
+L        192.168.12.1/32 is directly connected, Serial1/0
+      192.168.13.0/24 is variably subnetted, 2 subnets, 2 masks
+C        192.168.13.0/30 is directly connected, Serial1/1
+L        192.168.13.1/32 is directly connected, Serial1/1
+      192.168.23.0/30 is subnetted, 1 subnets
+O        192.168.23.0 [110/128] via 192.168.13.2, 00:11:51, Serial1/1
+                      [110/128] via 192.168.12.2, 00:16:13, Serial1/0
+```
+show ip protocols
+``` bash
+R1#show ip protocols
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "ospf 1"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 192.168.13.1
+  Number of areas in this router is 1. 1 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    192.168.1.0 0.0.0.255 area 0
+    192.168.12.0 0.0.0.3 area 0
+    192.168.13.0 0.0.0.3 area 0
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    192.168.23.2         110      00:13:04
+    192.168.23.1         110      00:17:26
+  Distance: (default is 110)
+```
+</details>
+
+<details>
+ <summary>Проверка на S2</summary>
+
+``` bash
+```
+show ip ospf neighbor
+``` bash
+R2#show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+192.168.23.2      0   FULL/  -        00:00:37    192.168.23.2    Serial1/1
+192.168.13.1      0   FULL/  -        00:00:35    192.168.12.1    Serial1/0
+```
+show ip route
+``` bash
+R2#show ip route
+
+Gateway of last resort is not set
+
+O     192.168.1.0/24 [110/74] via 192.168.12.1, 00:19:05, Serial1/0
+      192.168.2.0/24 is variably subnetted, 2 subnets, 2 masks
+C        192.168.2.0/24 is directly connected, Ethernet0/0
+L        192.168.2.1/32 is directly connected, Ethernet0/0
+O     192.168.3.0/24 [110/74] via 192.168.23.2, 00:14:52, Serial1/1
+      192.168.12.0/24 is variably subnetted, 2 subnets, 2 masks
+C        192.168.12.0/30 is directly connected, Serial1/0
+L        192.168.12.2/32 is directly connected, Serial1/0
+      192.168.13.0/30 is subnetted, 1 subnets
+O        192.168.13.0 [110/128] via 192.168.23.2, 00:14:52, Serial1/1
+                      [110/128] via 192.168.12.1, 00:19:05, Serial1/0
+      192.168.23.0/24 is variably subnetted, 2 subnets, 2 masks
+C        192.168.23.0/30 is directly connected, Serial1/1
+L        192.168.23.1/32 is directly connected, Serial1/1
+```
+show ip protocols
+``` bash
+R2# show ip protocols
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "ospf 1"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 192.168.23.1
+  Number of areas in this router is 1. 1 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    192.168.2.0 0.0.0.255 area 0
+    192.168.12.0 0.0.0.3 area 0
+    192.168.23.0 0.0.0.3 area 0
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    192.168.13.1         110      00:19:46
+    192.168.23.2         110      00:15:33
+  Distance: (default is 110)
+```
+</details>
+
+<details>
+ <summary>Проверка на S3</summary>
+
+
+``` bash
+R3#show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+192.168.23.1      0   FULL/  -        00:00:36    192.168.23.1    Serial1/1
+192.168.13.1      0   FULL/  -        00:00:37    192.168.13.1    Serial1/0
+```
+``` bash
+R3#show ip route
+
+Gateway of last resort is not set
+
+O     192.168.1.0/24 [110/74] via 192.168.13.1, 00:18:33, Serial1/0
+O     192.168.2.0/24 [110/74] via 192.168.23.1, 00:18:23, Serial1/1
+      192.168.3.0/24 is variably subnetted, 2 subnets, 2 masks
+C        192.168.3.0/24 is directly connected, Ethernet0/0
+L        192.168.3.1/32 is directly connected, Ethernet0/0
+      192.168.12.0/30 is subnetted, 1 subnets
+O        192.168.12.0 [110/128] via 192.168.23.1, 00:18:23, Serial1/1
+                      [110/128] via 192.168.13.1, 00:18:33, Serial1/0
+      192.168.13.0/24 is variably subnetted, 2 subnets, 2 masks
+C        192.168.13.0/30 is directly connected, Serial1/0
+L        192.168.13.2/32 is directly connected, Serial1/0
+      192.168.23.0/24 is variably subnetted, 2 subnets, 2 masks
+C        192.168.23.0/30 is directly connected, Serial1/1
+L        192.168.23.2/32 is directly connected, Serial1/1
+```
+show ip protocols
+``` bash
 ```
 </details>
