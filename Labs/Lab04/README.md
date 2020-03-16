@@ -641,7 +641,7 @@ Neighbor ID     Pri   State           Dead Time   Address         Interface
 ```
 </details>
 
-##### *Изменить идентификатор маршрутизаторов с помощью команды router-id.*
+##### *Шаг 2. Изменить идентификатор маршрутизаторов с помощью команды router-id.*
 
 Настроим значения router-id маршрутизаторов R1, R2 и R3 на 11.11.11.11, 22.22.22.22 и 33.33.33.33 соответственно.
 
@@ -697,3 +697,53 @@ Neighbor ID     Pri   State           Dead Time   Address         Interface
 
 ### Часть 4. Настройка пассивных интерфейсов OSPF
 
+##### *Шаг 1. Настроим интерфейсы e0/0 на всех роутерах, чтобы через них не пересылались обновления маршрутов.*
+
+<details>
+ <summary>Отключение обновлений на E0/0 интерфейсах</summary>
+
+``` bash
+R1#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+R1(config)#router ospf 1
+R1(config-router)#passive-interface e0/0
+R1(config-router)#exit
+R1(config)#exit
+R1#wr
+
+```
+</details>
+
+Проверка passive-interface на E0/0
+``` bash
+R1#show ip ospf interface e0/0
+Ethernet0/0 is up, line protocol is up
+  Internet Address 192.168.1.1/24, Area 0, Attached via Network Statement
+  Process ID 1, Router ID 11.11.11.11, Network Type BROADCAST, Cost: 10
+  
+    No Hellos (Passive interface)
+```
+Проверим, что у роутеров R2 и R3 не пропали маршруты до сети 192.168.1.0/24
+
+<details>
+ <summary>R2 знает маршрут до 192.168.1.0/24</summary>
+
+``` bash
+R2#sh ip route ospf
+
+O     192.168.1.0/24 [110/74] via 192.168.12.1, 00:33:10, Serial1/0
+```
+</details>
+
+<details>
+ <summary>R3 знает маршрут до 192.168.1.0/24</summary>
+
+``` bash
+R3#sh ip route ospf
+
+O     192.168.1.0/24 [110/74] via 192.168.13.1, 00:24:41, Serial1/0
+
+```
+</details>
+
+##### *Шаг 2. Настроить на маршрутизаторе пассивный интерфейс в качестве интерфейса по умолчанию.*
