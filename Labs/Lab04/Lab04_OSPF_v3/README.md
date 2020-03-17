@@ -23,74 +23,78 @@
   <tr>
     <th>Устройство</th>
     <th>Интерфейс</th>
-    <th>IP-адрес IPv6</th>
+    <th colspan="2">IP-адрес IPv6</th>
+    <th></th>
     <th>Шлюз по умолчанию</th>
   </tr>
   <tr>
     <td rowspan="3">R1</td>
     <td>E0/0</td>
-    <td>2001:DB8:ACAD:A::1/64
-FE80::1 локальный канал</td>
+    <td>2001:DB8:ACAD:A::1/64</td>
+    <td>FE80::1</td>
     <td rowspan="9"></td>
   </tr>
   <tr>
     <td>S1/0 (DCE)</td>
-    <td>2001:DB8:ACAD:12::1/64
-FE80::1 локальный канал</td>
+    <td>2001:DB8:ACAD:12::1/64</td>
+    <td>FE80::1</td>
   </tr>
   <tr>
     <td>S1/1</td>
-    <td>2001:DB8:ACAD:13::1/64
-FE80::1 локальный канал</td>
+    <td>2001:DB8:ACAD:13::1/64</td>
+    <td>FE80::1</td>
   </tr>
   <tr>
     <td rowspan="3">R2</td>
     <td>E0/0</td>
-    <td>2001:DB8:ACAD:B::2/64
-FE80::2 локальный канал</td>
+    <td>2001:DB8:ACAD:B::2/64</td>
+    <td>FE80::2</td>
   </tr>
   <tr>
     <td>S1/0</td>
-    <td>2001:DB8:ACAD:12::2/64
-FE80::2 локальный канал</td>
+    <td>2001:DB8:ACAD:12::2/64</td>
+    <td>FE80::2</td>
   </tr>
   <tr>
     <td>S1/1 (DCE)</td>
-    <td>2001:DB8:ACAD:23::2/64
-FE80::2 локальный канал</td>
+    <td>2001:DB8:ACAD:23::2/64</td>
+    <td>FE80::2</td>
   </tr>
   <tr>
     <td rowspan="3">R3</td>
     <td>E0/0</td>
-    <td>2001:DB8:ACAD:C::3/64
-FE80::3 локальный канал</td>
+    <td>2001:DB8:ACAD:C::3/64</td>
+    <td>FE80::3</td>
   </tr>
   <tr>
     <td>S1/0 (DCE)</td>
-    <td>2001:DB8:ACAD:13::3/64
-FE80::3 локальный канал</td>
+    <td>2001:DB8:ACAD:13::3/64</td>
+    <td>FE80::3</td>
   </tr>
   <tr>
     <td>S1/1</td>
-    <td>2001:DB8:ACAD:23::3/64
-FE80::3 локальный канал</td>
+    <td>2001:DB8:ACAD:23::3/64</td>
+    <td>FE80::3</td>
   </tr>
   <tr>
     <td>PC-A</td>
     <td>NIC</td>
     <td>2001:DB8:ACAD:A::A/64</td>
+    <td></td>
     <td>FE80::1</td>
   </tr>
   <tr>
     <td>PC-B</td>
     <td>NIC</td>
     <td>2001:DB8:ACAD:B::B/64</td>
+    <td></td>
     <td>FE80::2</td>
   </tr>
   <tr>
     <td>PC-C</td>
     <td>NIC</td>
     <td>2001:DB8:ACAD:C::C/64</td>
+    <td></td>
     <td>FE80::3</td>
   </tr>
 </table>
