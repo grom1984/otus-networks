@@ -187,9 +187,11 @@ Po1 S1 (active) <-> Po1 S2 (desirable).
 Изменил режим etherchannel Po1 S2 на "passive"
 ```
 </details>
+
 <details>
  <summary>Просмотр исправлений конфига для S1</summary>
-
+<p><span style="color: #ffcc00;">жёлтым</span> выделены добавленые и/или исправленые выше строки</p>
+<p><strong>жирным</strong> добавленные необязательные строки</p>
 ![correction_S1](correction_S1.png)
 
 </details>
@@ -200,16 +202,165 @@ Po1 S1 (active) <-> Po1 S2 (desirable).
 
 <details>
  <summary>Просмотр исправлений конфига для S2</summary>
- 
+ <p><span style="color: #ffcc00;">жёлтым</span> выделены добавленые и/или исправленые выше строки</p>
+<p><strong>жирным</strong> добавленные необязательные строки</p>
+
 ![correction_S2](correction_S2.png)
 
 </details>
 <details>
  <summary>Просмотр исправлений конфига для S3</summary>
- 
+
+<p><span style="color: #ffcc00;">жёлтым</span> выделены добавленые и/или исправленые выше строки</p>
+<p><strong>жирным</strong> добавленные необязательные строки</p>
+
 ![correction_S3](correction_S3.png)
 
 </details>
 
+##### *Шаг 4. Проверка EtherChannel и подключения*
+
+Проверка работы EtherChannel на всех коммутаторах
+
+<details>
+ <summary>Коммутатор S1</summary>
+
+<p>S1#<span style="color: #076300;">sh int Po1</span> </p>
+
+``` bash
+Port-channel1 is up, line protocol is up (connected) 
+  Hardware is EtherChannel, address is aabb.cc00.1000 (bia aabb.cc00.1000)
+  MTU 1500 bytes, BW 20000 Kbit/sec, DLY 100 usec, 
+     reliability 255/255, txload 1/255, rxload 1/255
+  
+  Members in this channel: Et0/0 Et0/1
+```
+<p>S1#<span style="color: #076300;">sh int Po2</span> </p>
+
+``` bash
+Port-channel2 is up, line protocol is up (connected) 
+  Hardware is EtherChannel, address is aabb.cc00.1020 (bia aabb.cc00.1020)
+  MTU 1500 bytes, BW 20000 Kbit/sec, DLY 100 usec, 
+     reliability 255/255, txload 1/255, rxload 1/255
+  
+  Members in this channel: Et0/2 Et0/3
+```
+<p>S1#<span style="color: #076300;">sh etherchannel summary</span> </p>
+
+``` bash
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+1      Po1(SU)         LACP      Et0/0(P)    Et0/1(P)    
+2      Po2(SU)         PAgP      Et0/2(P)    Et0/3(P) 
+```
+</details>
+
+<details>
+ <summary>Коммутатор S2</summary>
+
+<p>S2#<span style="color: #076300;">sh int Po1</span> </p>
+
+``` bash
+Port-channel1 is up, line protocol is up (connected) 
+  Hardware is EtherChannel, address is aabb.cc00.2010 (bia aabb.cc00.2010)
+  MTU 1500 bytes, BW 20000 Kbit/sec, DLY 1000 usec, 
+     reliability 255/255, txload 1/255, rxload 1/255
+  
+  Members in this channel: Et0/0 Et0/1
+```
+<p>S2#<span style="color: #076300;">sh int Po3</span> </p>
+
+``` bash
+Port-channel3 is up, line protocol is up (connected) 
+  Hardware is EtherChannel, address is aabb.cc00.2020 (bia aabb.cc00.2020)
+  MTU 1500 bytes, BW 20000 Kbit/sec, DLY 1000 usec, 
+     reliability 255/255, txload 1/255, rxload 1/255
+  
+  Members in this channel: Et0/2 Et0/3
+```
+<p>S2#<span style="color: #076300;">sh etherchannel summary</span> </p>
+
+``` bash
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+1      Po1(SU)         LACP      Et0/0(P)    Et0/1(P)
+3      Po3(SU)         PAgP      Et0/2(P)    Et0/3(P)
+```
+</details>
+
+<details>
+ <summary>Коммутатор S3</summary>
+
+<p>S3#<span style="color: #076300;">sh int Po2</span> </p>
+
+``` bash
+Port-channel2 is up, line protocol is up (connected) 
+  Hardware is EtherChannel, address is aabb.cc00.3030 (bia aabb.cc00.3030)
+  MTU 1500 bytes, BW 20000 Kbit/sec, DLY 1000 usec, 
+     reliability 255/255, txload 1/255, rxload 1/255
+   
+  Members in this channel: Et0/2 Et0/3
+```
+<p>S3#<span style="color: #076300;">sh int Po3</span> </p>
+
+``` bash
+Port-channel3 is up, line protocol is up (connected) 
+  Hardware is EtherChannel, address is aabb.cc00.3000 (bia aabb.cc00.3000)
+  MTU 1500 bytes, BW 20000 Kbit/sec, DLY 1000 usec, 
+     reliability 255/255, txload 1/255, rxload 1/255
+  
+  Members in this channel: Et0/0 Et0/1 
+```
+<p>S3#<span style="color: #076300;">sh etherchannel summary</span> </p>
+
+``` bash
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+2      Po2(SU)         PAgP      Et0/2(P)    Et0/3(P)
+3      Po3(SU)         PAgP      Et0/0(P)    Et0/1(P)
+```
+</details>
+
+Проверьте подключение сети VLAN Management.
+
+<details>
+ <summary>Ping между коммутаторами</summary>
+
+<p>S1#<span style="color: #076300;">ping 192.168.1.12</span> </p>
+
+``` bash
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 192.168.1.12, timeout is 2 seconds:
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 1/1/1 ms
+```
+<p>S1#<span style="color: #076300;">ping 192.168.1.13</span> </p>
+
+``` bash
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 192.168.1.13, timeout is 2 seconds:
+.!!!!
+Success rate is 80 percent (4/5), round-trip min/avg/max = 1/1/1 ms
+```
+<p>S2#<span style="color: #076300;">ping 192.168.1.13</span> </p>
+
+``` bash
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 192.168.1.13, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms
+```
+</details>
+
+Проверьте подключения компьютеров.
+
+<details>
+ <summary>Ping между ПК</summary>
+
+<p>PC-A><span style="color: #076300;">ping 192.168.0.3</span> </p>
+
+![](ping.png)
+
+</details>
 
 
