@@ -357,7 +357,7 @@ Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms
 <details>
  <summary>Ping между ПК</summary>
 
-<p>PC-A><span style="color: #076300;">ping 192.168.0.3</span> </p>
+<html><p>PC-A><span style="color: #076300;">ping 192.168.0.3</span> </p></html>
 
 ![](ping.png)
 
