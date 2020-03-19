@@ -84,14 +84,82 @@ S1(config-if)# switchport mode access
  <summary>Настройка S2</summary>
 
 ``` bash
-
+S2(config)#hostname S2
+S2(config)#interface range e0/0-3
+S2(config-if-range)#shutdown
+S2(config-if-range)#exit
+S2(config)#enable secret class
+S2(config)#no ip domain lookup
+S2(config)#line vty 0 4
+S2(config-line)#password cisco
+S2(config-line)#login
+S2(config-line)#line con 0
+S2(config-line)#password cisco
+S2(config-line)#logging synchronous
+S2(config-line)#login
+S2(config-line)#exit
+S2(config)#vlan 10
+S2(config-vlan)#name User
+S2(config-vlan)#vlan 99
+S2(config-vlan)#name Management
+S2(config-vlan)#spanning-tree vlan 1,10,99 root primary
+S2(config-vlan)#interface range e0/0-1
+S2(config-if-range)#switchport mode trunk
+S2(config-if-range)#channel-group 1 mode desirable
+S2(config-if-range)#switchport trunk native vlan 99
+S2(config-if-range)#no shutdown
+S2(config)#interface range e0/2-3
+S2(config-if-range)#switchport mode trunk
+S2(config-if-range)#channel-group 3 mode desirable
+S2(config-if-range)#switchport trunk native vlan 99
+S2(config)#interface vlan 99
+S2(config-if)#ip address 192.168.1.12 255.255.255.0
+S2(config)#interface port-channel 1
+S2(config-if)#switchport trunk native vlan 99
+S2(config-if)#switchport trunk allowed vlan 1,99
+S2(config)#interface port-channel 3
+S2(config-if)#switchport trunk native vlan 99
+S2(config-if)#switchport trunk allowed vlan 1,10,99
+S2(config-if)#switchport mode trunk
 ```
 </details>
 <details>
  <summary>Настройка S3</summary>
 
 ``` bash
-
+S3(config)#hostname S3
+S3(config)#interface range e0/0-3, e1/0-3
+S3(config-if-range)#shutdown
+S3(config-if-range)#exit
+S3(config)#enable secret class
+S3(config)#no ip domain lookup
+S3(config)#line vty 0 4
+S3(config-line)#password cisco
+S3(config-line)#login
+S3(config-line)##line con 0
+S3(config-line)#password cisco
+S3(config-line)#logging synchronous
+S3(config-line)#login
+S3(config-line)#exit
+S3(config)#vlan 10
+S3(config-vlan)#name User
+S3(config-vlan)#vlan 99
+S3(config-vlan)#name Management
+S3(config-vlan)#interface range e0/0-1
+S3(config-if-range)#interface range e0/2-3
+S3(config-if-range)#switchport mode trunk
+S3(config-if-range)#channel-group 3 mode desirable
+S3(config-if-range)#switchport trunk native vlan 99
+S3(config-if-range)#no shutdown
+S3(config)#interface e1/0
+S3(config-if)#switchport mode access
+S3(config-if)#switchport access vlan 10
+S3(config-if)#no shutdown
+S3(config)#interface vlan 99
+S3(config-if)#ip address 192.168.1.13 255.255.255.0
+S3(config-if)#interface port-channel 3
+S3(config-if)#switchport trunk native vlan 99
+S3(config-if)#switchport mode trunk
 ```
 </details>
 
@@ -187,11 +255,13 @@ Po1 S1 (active) <-> Po1 S2 (desirable).
 Изменил режим etherchannel Po1 S2 на "passive"
 ```
 </details>
-
 <details>
- <summary>Просмотр исправлений конфига для S1</summary>
-<p><span style="color: #ffcc00;">жёлтым</span> выделены добавленые и/или исправленые выше строки</p>
-<p><strong>жирным</strong> добавленные необязательные строки</p>
+<summary>Просмотр исправлений конфига для S1</summary>
+
+ **жёлтым** выделены добавленые и/или исправленые выше строки
+
+ **жирным** добавленные необязательные строки
+
 ![correction_S1](correction_S1.png)
 
 </details>
@@ -202,8 +272,10 @@ Po1 S1 (active) <-> Po1 S2 (desirable).
 
 <details>
  <summary>Просмотр исправлений конфига для S2</summary>
- <p><span style="color: #ffcc00;">жёлтым</span> выделены добавленые и/или исправленые выше строки</p>
-<p><strong>жирным</strong> добавленные необязательные строки</p>
+
+ **жёлтым** выделены добавленые и/или исправленые выше строки
+
+ **жирным** добавленные необязательные строки
 
 ![correction_S2](correction_S2.png)
 
@@ -211,8 +283,9 @@ Po1 S1 (active) <-> Po1 S2 (desirable).
 <details>
  <summary>Просмотр исправлений конфига для S3</summary>
 
-<p><span style="color: #ffcc00;">жёлтым</span> выделены добавленые и/или исправленые выше строки</p>
-<p><strong>жирным</strong> добавленные необязательные строки</p>
+**жёлтым** выделены добавленые и/или исправленые выше строки
+
+ **жирным** добавленные необязательные строки
 
 ![correction_S3](correction_S3.png)
 
@@ -225,7 +298,7 @@ Po1 S1 (active) <-> Po1 S2 (desirable).
 <details>
  <summary>Коммутатор S1</summary>
 
-<p>S1#<span style="color: #076300;">sh int Po1</span> </p>
+###### *S1#sh int Po1*
 
 ``` bash
 Port-channel1 is up, line protocol is up (connected) 
@@ -235,7 +308,7 @@ Port-channel1 is up, line protocol is up (connected)
   
   Members in this channel: Et0/0 Et0/1
 ```
-<p>S1#<span style="color: #076300;">sh int Po2</span> </p>
+###### *S1#sh int Po2*
 
 ``` bash
 Port-channel2 is up, line protocol is up (connected) 
@@ -245,7 +318,7 @@ Port-channel2 is up, line protocol is up (connected)
   
   Members in this channel: Et0/2 Et0/3
 ```
-<p>S1#<span style="color: #076300;">sh etherchannel summary</span> </p>
+###### *S1#sh etherchannel summary*
 
 ``` bash
 Group  Port-channel  Protocol    Ports
@@ -258,7 +331,7 @@ Group  Port-channel  Protocol    Ports
 <details>
  <summary>Коммутатор S2</summary>
 
-<p>S2#<span style="color: #076300;">sh int Po1</span> </p>
+###### *S2#sh int Po1*
 
 ``` bash
 Port-channel1 is up, line protocol is up (connected) 
@@ -268,7 +341,7 @@ Port-channel1 is up, line protocol is up (connected)
   
   Members in this channel: Et0/0 Et0/1
 ```
-<p>S2#<span style="color: #076300;">sh int Po3</span> </p>
+###### *S2#sh int Po3*
 
 ``` bash
 Port-channel3 is up, line protocol is up (connected) 
@@ -278,7 +351,7 @@ Port-channel3 is up, line protocol is up (connected)
   
   Members in this channel: Et0/2 Et0/3
 ```
-<p>S2#<span style="color: #076300;">sh etherchannel summary</span> </p>
+###### *S2#sh etherchannel summary*
 
 ``` bash
 Group  Port-channel  Protocol    Ports
@@ -291,7 +364,7 @@ Group  Port-channel  Protocol    Ports
 <details>
  <summary>Коммутатор S3</summary>
 
-<p>S3#<span style="color: #076300;">sh int Po2</span> </p>
+###### *S3#sh int Po2*
 
 ``` bash
 Port-channel2 is up, line protocol is up (connected) 
@@ -301,7 +374,7 @@ Port-channel2 is up, line protocol is up (connected)
    
   Members in this channel: Et0/2 Et0/3
 ```
-<p>S3#<span style="color: #076300;">sh int Po3</span> </p>
+###### *S3#sh int Po3*
 
 ``` bash
 Port-channel3 is up, line protocol is up (connected) 
@@ -311,7 +384,7 @@ Port-channel3 is up, line protocol is up (connected)
   
   Members in this channel: Et0/0 Et0/1 
 ```
-<p>S3#<span style="color: #076300;">sh etherchannel summary</span> </p>
+###### *S3#sh etherchannel summary*
 
 ``` bash
 Group  Port-channel  Protocol    Ports
@@ -326,7 +399,7 @@ Group  Port-channel  Protocol    Ports
 <details>
  <summary>Ping между коммутаторами</summary>
 
-<p>S1#<span style="color: #076300;">ping 192.168.1.12</span> </p>
+###### *S1#ping 192.168.1.12*
 
 ``` bash
 Type escape sequence to abort.
@@ -334,7 +407,7 @@ Sending 5, 100-byte ICMP Echos to 192.168.1.12, timeout is 2 seconds:
 .!!!!
 Success rate is 80 percent (4/5), round-trip min/avg/max = 1/1/1 ms
 ```
-<p>S1#<span style="color: #076300;">ping 192.168.1.13</span> </p>
+###### *S1#ping 192.168.1.13*
 
 ``` bash
 Type escape sequence to abort.
@@ -342,7 +415,7 @@ Sending 5, 100-byte ICMP Echos to 192.168.1.13, timeout is 2 seconds:
 .!!!!
 Success rate is 80 percent (4/5), round-trip min/avg/max = 1/1/1 ms
 ```
-<p>S2#<span style="color: #076300;">ping 192.168.1.13</span> </p>
+###### *S2#ping 192.168.1.13*
 
 ``` bash
 Type escape sequence to abort.
@@ -358,9 +431,7 @@ Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms
  <summary>Ping между ПК</summary>
 
 
-PC-A><span style="color:green"> ping 192.168.0.3</span>
-
-PC-A><span style="color:green"> *ping 192.168.0.3*</span>
+###### *PC-A> ping 192.168.0.3*
 
 ![](ping.png)
 
