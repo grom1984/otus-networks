@@ -4,6 +4,7 @@
 ### Задание:
 #### Часть 1. [Создание сети и настройка основных параметров устройства](README.md#часть-1-создание-сети-инастройка-основных-параметров-устройства-1)
 #### Часть 2. [Настройка сети OSPFv2 для нескольких областей](README.md#часть-2-настройка-сети-ospfv2-для-нескольких-областей-1)
+#### Часть 3. [Настройка межобластных суммарных маршрутов](README.md#часть-3-настройка-межобластных-суммарных-маршрутов-1)
 
 ### Топология
 Создали стенд в eve-ng согласно топологии.
@@ -572,3 +573,215 @@ Neighbor ID     Pri   State           Dead Time   Address         Interface
 3.3.3.3           0   FULL/  -        00:00:33    192.168.23.2    Serial1/1
  ```
   </details>
+
+### Часть 3. Настройка межобластных суммарных маршрутов
+
+##### *Просмотреть таблицы маршрутизации OSPF для всех маршрутизаторов*
+
+<details>
+ <summary>Таблица OSPF на R1</summary>
+
+``` bash
+R1#show ip route ospf
+
+Gateway of last resort is 0.0.0.0 to network 0.0.0.0
+
+      192.168.4.0/32 is subnetted, 1 subnets
+O IA     192.168.4.1 [110/129] via 192.168.12.2, 00:07:49, Serial1/0
+      192.168.5.0/32 is subnetted, 1 subnets
+O IA     192.168.5.1 [110/129] via 192.168.12.2, 00:07:49, Serial1/0
+      192.168.6.0/32 is subnetted, 1 subnets
+O IA     192.168.6.1 [110/65] via 192.168.12.2, 00:07:49, Serial1/0
+      192.168.23.0/30 is subnetted, 1 subnets
+O IA     192.168.23.0 [110/128] via 192.168.12.2, 00:07:49, Serial1/0
+
+```
+</details>
+
+<details>
+ <summary>Таблица OSPF на R2</summary>
+
+``` bash
+R2#show ip route ospf
+
+Gateway of last resort is 192.168.12.1 to network 0.0.0.0
+
+O*E2  0.0.0.0/0 [110/1] via 192.168.12.1, 00:09:47, Serial1/0
+      192.168.1.0/32 is subnetted, 1 subnets
+O IA     192.168.1.1 [110/65] via 192.168.12.1, 00:09:46, Serial1/0
+      192.168.2.0/32 is subnetted, 1 subnets
+O IA     192.168.2.1 [110/65] via 192.168.12.1, 00:09:46, Serial1/0
+      192.168.4.0/32 is subnetted, 1 subnets
+O        192.168.4.1 [110/65] via 192.168.23.2, 00:09:47, Serial1/1
+      192.168.5.0/32 is subnetted, 1 subnets
+O        192.168.5.1 [110/65] via 192.168.23.2, 00:09:47, Serial1/1
+
+```
+</details>
+
+<details>
+ <summary>Таблица OSPF на R3</summary>
+
+``` bash
+R3#show ip route ospf
+
+Gateway of last resort is 192.168.23.1 to network 0.0.0.0
+
+O*E2  0.0.0.0/0 [110/1] via 192.168.23.1, 00:10:32, Serial1/1
+      192.168.1.0/32 is subnetted, 1 subnets
+O IA     192.168.1.1 [110/129] via 192.168.23.1, 00:10:30, Serial1/1
+      192.168.2.0/32 is subnetted, 1 subnets
+O IA     192.168.2.1 [110/129] via 192.168.23.1, 00:10:30, Serial1/1
+      192.168.6.0/32 is subnetted, 1 subnets
+O        192.168.6.1 [110/65] via 192.168.23.1, 00:10:37, Serial1/1
+      192.168.12.0/30 is subnetted, 1 subnets
+O IA     192.168.12.0 [110/128] via 192.168.23.1, 00:10:32, Serial1/1
+
+```
+</details>
+
+##### *Просмотреть базы данных LSDB на всех маршрутизаторах*
+
+<details>
+ <summary>LSDB на R1</summary>
+
+``` bash
+R1#show ip ospf database
+
+            OSPF Router with ID (1.1.1.1) (Process ID 1)
+
+                Router Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+1.1.1.1         1.1.1.1         803         0x80000003 0x00485E 2
+2.2.2.2         2.2.2.2         827         0x80000002 0x00E3C0 2
+
+                Summary Net Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+192.168.1.1     1.1.1.1         818         0x80000001 0x00AE1E
+192.168.2.1     1.1.1.1         818         0x80000001 0x00A328
+192.168.4.1     2.2.2.2         821         0x80000001 0x00F193
+192.168.5.1     2.2.2.2         821         0x80000001 0x00E69D
+192.168.6.1     2.2.2.2         821         0x80000001 0x00596A
+192.168.23.0    2.2.2.2         821         0x80000001 0x000E69
+
+                Router Link States (Area 1)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+1.1.1.1         1.1.1.1         828         0x80000002 0x009CA0 2
+
+                Summary Net Link States (Area 1)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+192.168.4.1     1.1.1.1         798         0x80000001 0x0092B6
+192.168.5.1     1.1.1.1         798         0x80000001 0x0087C0
+192.168.6.1     1.1.1.1         798         0x80000001 0x00F98D
+192.168.12.0    1.1.1.1         818         0x80000001 0x00A5E0
+192.168.23.0    1.1.1.1         798         0x80000001 0x00AE8C
+
+                Type-5 AS External Link States
+
+Link ID         ADV Router      Age         Seq#       Checksum Tag
+0.0.0.0         1.1.1.1         832         0x80000001 0x001D91 1
+```
+ </details>
+
+<details>
+ <summary>LSDB на R2</summary>
+
+``` bash
+R2#show ip ospf database
+
+            OSPF Router with ID (2.2.2.2) (Process ID 1)
+
+                Router Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+1.1.1.1         1.1.1.1         810         0x80000003 0x00485E 2
+2.2.2.2         2.2.2.2         833         0x80000002 0x00E3C0 2
+
+                Summary Net Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+192.168.1.1     1.1.1.1         826         0x80000001 0x00AE1E
+192.168.2.1     1.1.1.1         826         0x80000001 0x00A328
+192.168.4.1     2.2.2.2         826         0x80000001 0x00F193
+192.168.5.1     2.2.2.2         826         0x80000001 0x00E69D
+192.168.6.1     2.2.2.2         826         0x80000001 0x00596A
+192.168.23.0    2.2.2.2         826         0x80000001 0x000E69
+
+                Router Link States (Area 3)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+2.2.2.2         2.2.2.2         833         0x80000002 0x007491 3
+3.3.3.3         3.3.3.3         832         0x80000002 0x00F989 4
+
+                Summary Net Link States (Area 3)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+192.168.1.1     2.2.2.2         825         0x80000001 0x001375
+192.168.2.1     2.2.2.2         825         0x80000001 0x00087F
+192.168.12.0    2.2.2.2         826         0x80000001 0x0087FA
+
+                Summary ASB Link States (Area 3)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+1.1.1.1         2.2.2.2         826         0x80000001 0x00935C
+
+                Type-5 AS External Link States
+
+Link ID         ADV Router      Age         Seq#       Checksum Tag
+0.0.0.0         1.1.1.1         839         0x80000001 0x001D91 1
+```
+ </details>
+
+ <details>
+ <summary>LSDB на R3</summary>
+
+``` bash
+R3#show ip ospf database
+
+            OSPF Router with ID (3.3.3.3) (Process ID 1)
+
+                Router Link States (Area 3)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+2.2.2.2         2.2.2.2         840         0x80000002 0x007491 3
+3.3.3.3         3.3.3.3         837         0x80000002 0x00F989 4
+
+                Summary Net Link States (Area 3)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+192.168.1.1     2.2.2.2         832         0x80000001 0x001375
+192.168.2.1     2.2.2.2         832         0x80000001 0x00087F
+192.168.12.0    2.2.2.2         833         0x80000001 0x0087FA
+
+                Summary ASB Link States (Area 3)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+1.1.1.1         2.2.2.2         833         0x80000001 0x00935C
+
+                Type-5 AS External Link States
+
+Link ID         ADV Router      Age         Seq#       Checksum Tag
+0.0.0.0         1.1.1.1         845         0x80000001 0x001D91 1
+```
+ </details>
+
+ ##### *Настроить межобластные суммарные маршруты*
+
+
+Рассчитать суммарный маршрут для сетей в __area 1__
+
+<details>
+ <summary>LSDB на R1</summary>
+
+``` bash
+В зоне 1 две подсети 192.168.1.0/24 и 192.168.2.0/24. Можно объединить в одну 192.168.0.0/22. Это и будет суммарным маршрутом для area 1.
+
+
+
+```
+
+</details>
