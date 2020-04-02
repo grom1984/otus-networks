@@ -6,7 +6,7 @@
 
 #### Часть 2. [Настройка маршрутизации EIGRP](README.md#часть-2-настройка-маршрутизации-eigrp-1)
 
-#### Часть 3. [Проверка маршрутизации](README.md#часть-3-проверка-маршрутизации-1)
+#### Часть 3. [Проверка маршрутизации EIGRP](README.md#часть-3-проверка-маршрутизации-1)
 
 #### Часть 4. [Настройка пропускной способности и пассивных интерфейсов](README.md#часть-4-настройка-пропускной-способности-и-пассивных-интерфейсов-1)
 
@@ -496,4 +496,136 @@ Routing Protocol is "eigrp 10"
 > 
 Сколько маршрутов с равной стоимостью по умолчанию использует EIGRP?
 > 2
+
+### Часть 4. Настройка пропускной способности и пассивных интерфейсов
+
+<details>
+ <summary>R1#sh int</summary>
+
+``` bash
+R1#sh int s1/0
+Serial1/0 is up, line protocol is up
+  Hardware is M4T
+  Internet address is 10.1.1.1/30
+  MTU 1500 bytes, BW 1544 Kbit/sec, DLY 20000 usec
+```
+</details>
+
+Какова пропускная способность по умолчанию для этого последовательного интерфейса?
+
+> BW 1544 Kbit/sec
+
+Изменим пропускную способность на всех последовательных интерфейсах маршрутизаторов
+
+<details>
+ <summary>R1</summary>
+
+``` bash
+R1#conf t
+R1(config)#interface s1/0
+R1(config-if)#bandwidth 2000
+R1(config-if)#interface s1/1
+R1(config-if)#bandwidth 64
+R1(config-if)#end
+R1#wr
+```
+</details>
+
+<details>
+ <summary>R2</summary>
+
+``` bash
+R2#conf t
+R2(config)#interface s1/0
+R2(config-if)#bandwidth 2000
+R2(config-if)#interface s1/1
+R2(config-if)#bandwidth 2000
+R2(config-if)#end
+R2#wr
+```
+</details>
+
+<details>
+ <summary>R3</summary>
+
+``` bash
+R3#conf t
+R3(config)#interface s1/0
+R3(config-if)#bandwidth 64
+R3(config-if)#interface s1/1
+R3(config-if)#bandwidth 2000
+R3(config-if)#end
+R3#wr
+```
+</details>
+
+Проверим изменения значения bandwidth на R1
+
+<details>
+ <summary>Проверка на R1</summary>
+
+``` bash
+R1#sh int s1/0
+Serial1/0 is up, line protocol is up
+  Hardware is M4T
+  Internet address is 10.1.1.1/30
+  MTU 1500 bytes, BW 2000 Kbit/sec
+```
+``` bash
+R1#sh int s1/1
+Serial1/1 is up, line protocol is up
+  Hardware is M4T
+  Internet address is 10.3.3.1/30
+  MTU 1500 bytes, BW 64 Kbit/sec
+```
+
+</details>
+
+Таблицы маршрутизации после изменения bandwidth
+
+<details>
+ <summary>Маршруты R1</summary>
+
+``` bash
+R1#show ip route eigrp
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 5 subnets, 2 masks
+D        10.2.2.0/30 [90/2304000] via 10.1.1.2, 00:13:57, Serial1/0
+D     192.168.2.0/24 [90/1817600] via 10.1.1.2, 00:14:34, Serial1/0
+D     192.168.3.0/24 [90/2329600] via 10.1.1.2, 00:13:57, Serial1/0
+```
+</details>
+
+<details>
+ <summary>Маршруты R2</summary>
+
+``` bash
+R2#sh ip route eigrp
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 5 subnets, 2 masks
+D        10.3.3.0/30 [90/41024000] via 10.2.2.1, 00:14:13, Serial1/1
+                     [90/41024000] via 10.1.1.1, 00:14:13, Serial1/0
+D     192.168.1.0/24 [90/1817600] via 10.1.1.1, 00:14:14, Serial1/0
+D     192.168.3.0/24 [90/1817600] via 10.2.2.1, 00:14:49, Serial1/1
+```
+</details>
+
+<details>
+ <summary>Маршруты R3</summary>
+
+``` bash
+R3#sh ip route eigrp
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 5 subnets, 2 masks
+D        10.1.1.0/30 [90/2304000] via 10.2.2.2, 00:15:00, Serial1/1
+D     192.168.1.0/24 [90/2329600] via 10.2.2.2, 00:15:00, Serial1/1
+D     192.168.2.0/24 [90/1817600] via 10.2.2.2, 00:15:00, Serial1/1
+```
+</details>
 
