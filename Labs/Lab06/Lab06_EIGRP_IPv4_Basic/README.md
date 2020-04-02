@@ -335,8 +335,16 @@ PC-A> ping 192.168.3.3
 Проверки отношений смежности, установленных с соседними маршрутизаторами.
 
 <details>
- <summary>Соседи R1</summary>
+ <summary>Соседи и маршруты R1</summary>
 
+``` bash
+R1#show ip eigrp neighbors
+EIGRP-IPv4 Neighbors for AS(10)
+H   Address                 Interface              Hold Uptime   SRTT   RTO  Q  Seq
+                                                   (sec)         (ms)       Cnt Num
+1   10.3.3.2                Se1/1                    14 01:28:59    8   100  0  5
+0   10.1.1.2                Se1/0                    10 01:29:53   14   100  0  7
+```
 ``` bash
 R1#sh ip route eigrp
 
@@ -352,7 +360,16 @@ D     192.168.3.0/24 [90/2195456] via 10.3.3.2, 00:57:28, Serial1/1
 </details>
 
 <details>
- <summary>Соседи R2</summary>
+ <summary>Соседи и маршруты R2</summary>
+
+``` bash
+R2#sh ip eigrp nei
+EIGRP-IPv4 Neighbors for AS(10)
+H   Address                 Interface              Hold Uptime   SRTT   RTO  Q  Seq
+                                                   (sec)         (ms)       Cnt Num
+1   10.2.2.1                Se1/1                    11 01:31:39   10   100  0  6
+0   10.1.1.1                Se1/0                    13 01:32:32   17   102  0  7
+```
 
 ``` bash
 R2#sh ip route eigrp
@@ -369,7 +386,16 @@ D     192.168.3.0/24 [90/2195456] via 10.2.2.1, 00:58:16, Serial1/1
 </details>
 
 <details>
- <summary>Соседи R3</summary>
+ <summary>Соседи и маршруты R3</summary>
+
+``` bash
+R3#sh ip eigrp nei
+EIGRP-IPv4 Neighbors for AS(10)
+H   Address                 Interface              Hold Uptime   SRTT   RTO  Q  Seq
+                                                   (sec)         (ms)       Cnt Num
+1   10.2.2.2                Se1/1                    12 01:32:33   18   108  0  6
+0   10.3.3.1                Se1/0                    13 01:32:33   17   102  0  6
+```
 
 ``` bash
 R3#sh ip route eigrp
@@ -384,3 +410,90 @@ D     192.168.2.0/24 [90/2195456] via 10.2.2.2, 00:58:51, Serial1/1
 
 ```
 </details>
+
+Почему у маршрутизатора R1 два пути к сети 10.2.2.0/30?
+> Потому что одинаковая стоимость маршрутов.
+
+<details>
+ <summary>Таблица топологий EIGRP на R1</summary>
+
+``` bash
+R1#show ip eigrp topology
+EIGRP-IPv4 Topology Table for AS(10)/ID(192.168.1.1)
+Codes: P - Passive, A - Active, U - Update, Q - Query, R - Reply,
+       r - reply Status, s - sia Status
+
+P 192.168.3.0/24, 1 successors, FD is 2195456
+        via 10.3.3.2 (2195456/281600), Serial1/1
+P 192.168.2.0/24, 1 successors, FD is 2195456
+        via 10.1.1.2 (2195456/281600), Serial1/0
+P 10.2.2.0/30, 2 successors, FD is 2681856
+        via 10.1.1.2 (2681856/2169856), Serial1/0
+        via 10.3.3.2 (2681856/2169856), Serial1/1
+P 10.3.3.0/30, 1 successors, FD is 2169856
+        via Connected, Serial1/1
+P 192.168.1.0/24, 1 successors, FD is 281600
+        via Connected, Ethernet0/0
+P 10.1.1.0/30, 1 successors, FD is 2169856
+        via Connected, Serial1/0
+
+```
+</details>
+
+Почему в таблице топологии маршрутизатора R1 отсутствуют возможные преемники?
+> Потому что не выполняется условие FC, которое требует, чтобы RD у FS был меньше FD successor-а.
+
+<details>
+ <summary>Параметры маршрутизации EIGRP на R1</summary>
+
+``` bash
+R1#sh ip protocols 
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "eigrp 10"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Default networks flagged in outgoing updates
+  Default networks accepted from incoming updates
+  EIGRP-IPv4 Protocol for AS(10)
+    Metric weight K1=1, K2=0, K3=1, K4=0, K5=0
+    NSF-aware route hold timer is 240
+    Router-ID: 192.168.1.1
+    Topology : 0 (base)
+      Active Timer: 3 min
+      Distance: internal 90 external 170
+      Maximum path: 4
+      Maximum hopcount 100
+      Maximum metric variance 1
+
+  Automatic Summarization: disabled
+  Maximum path: 4
+  Routing for Networks:
+    10.1.1.0/30
+    10.3.3.0/30
+    192.168.1.0
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    10.3.3.2              90      01:46:23
+    10.1.1.2              90      01:46:23
+  Distance: internal 90 external 170
+```
+</details>
+
+Вопросы:
+
+Какой номер автономной системы используется?
+> 10
+
+Какие сети объявляются?
+> 10.1.1.0/30 \
+10.3.3.0/30 \
+192.168.1.0
+
+Каково значение административной дистанции для маршрутов EIGRP?
+> 90 для внутренних \
+> 170 для внешних
+> 
+Сколько маршрутов с равной стоимостью по умолчанию использует EIGRP?
+> 2
+
