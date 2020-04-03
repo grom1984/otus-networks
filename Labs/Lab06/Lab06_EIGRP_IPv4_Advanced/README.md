@@ -345,8 +345,9 @@ PC1 : 192.168.3.3 255.255.255.0 gateway 192.168.3.1
 
 ### Часть 2. Настройка EIGRP и проверка подключения
 
+Настроим EIGRP на всех маршрутизаторах
 <details>
- <summary>Настройка EIGRP R1</summary>
+ <summary>R1</summary>
 
 ``` bash
 R1#conf t
@@ -354,10 +355,6 @@ R1(config)#router eigrp 1
 R1(config-router)#network 192.168.1.0 0.0.0.255
 R1(config-router)#network 192.168.12.0 0.0.0.3
 R1(config-router)#network 192.168.13.0 0.0.0.3
-R1(config-router)#network 192.168.11.0 0.0.0.3
-R1(config-router)#network 192.168.11.5 0.0.0.3
-R1(config-router)#network 192.168.11.9 0.0.0.3
-R1(config-router)#network 192.168.11.13 0.0.0.3
 R1(config-router)#passive-interface e0/0
 R1(config)#exit
 R1(config)#int s1/0
@@ -372,7 +369,7 @@ R1#wr
 </details>
 
 <details>
- <summary>Настройка EIGRP R2</summary>
+ <summary>R2</summary>
 
 ``` bash
 R2#conf t
@@ -380,7 +377,6 @@ R2(config)#router eigrp 1
 R2(config-router)#network 192.168.2.0
 R2(config-router)#network 192.168.12.0 0.0.0.3
 R2(config-router)#network 192.168.23.0 0.0.0.3
-R2(config-router)#network 192.168.22.0 0.0.0.3
 R2(config-router)#passive-interface e0/0
 R2(config-router)#exit
 R2(config)#int s1/0
@@ -395,7 +391,7 @@ R2#wr
 </details>
 
 <details>
- <summary>Настройка EIGRP R3</summary>
+ <summary>R3</summary>
 
 ``` bash
 R3#conf t
@@ -403,10 +399,6 @@ R3(config)#router eigrp 1
 R3(config-router)#network 192.168.3.0
 R3(config-router)#network 192.168.13.0 0.0.0.3
 R3(config-router)#network 192.168.23.0 0.0.0.3
-R3(config-router)#network 192.168.33.0 0.0.0.3
-R3(config-router)#network 192.168.33.5 0.0.0.3
-R3(config-router)#network 192.168.33.9 0.0.0.3
-R3(config-router)#network 192.168.33.13 0.0.0.3
 R3(config-router)#passive-interface e0/0
 R3(config-router)#exit
 R3(config)#int s1/0
@@ -427,3 +419,138 @@ R3#wr
 </details>
 
 ### Часть 3. Настройка EIGRP для автоматического объединения
+
+По-умолчанию автосуммирование маршрутов выключено.
+Настроим loopback-адреса на всех роутерах и включим их анонсирование в EIGRP.
+
+<details>
+ <summary>R1</summary>
+
+``` bash
+R1#conf t
+R1(config)#int Lo1
+R1(config-if)#ip address 192.168.11.1 255.255.255.252
+R1(config-if)#no shutdown
+R1(config-if)#end
+R1#conf t
+R1(config)#int Lo5
+R1(config-if)#ip address 192.168.11.5 255.255.255.252
+R1(config-if)#no shutdown
+R1(config-if)#end
+R1#conf t
+R1(config)#int Lo9
+R1(config-if)#ip address 192.168.11.9 255.255.255.252
+R1(config-if)#no shutdown
+R1(config-if)#end
+R1#conf t
+R1(config)#int Lo13
+R1(config-if)#ip address 192.168.11.13 255.255.255.252
+R1(config-if)#no shutdown
+R1(config-if)#end
+R1#conf t
+R1(config)#router eigrp 1
+R1(config-router)#network 192.168.11.0 0.0.0.3
+R1(config-router)#network 192.168.11.5 0.0.0.3
+R1(config-router)#network 192.168.11.9 0.0.0.3
+R1(config-router)#network 192.168.11.13 0.0.0.3
+R1(config-router)#end
+R1#wr
+```
+</details>
+
+<details>
+ <summary>R2</summary>
+
+``` bash
+R2#conf t
+R2(config)#int Lo1
+R2(config-if)#ip address 192.168.22.1 255.255.255.252
+R2(config-if)#no shutdown
+R2(config-if)#end
+R2#conf t
+R2(config)#router eigrp 1
+R2(config-router)#network 192.168.22.0 0.0.0.3
+R2#wr
+```
+</details>
+
+<details>
+ <summary>R3</summary>
+
+``` bash
+R3#conf t
+R3(config)#int Lo1
+R3(config-if)#ip address 192.168.33.1 255.255.255.252
+R3(config-if)#no shutdown
+R3(config-if)#end
+R3#conf t
+R3(config)#int Lo5
+R3(config-if)#ip address 192.168.33.5 255.255.255.252
+R3(config-if)#no shutdown
+R3(config-if)#end
+R3#conf t
+R3(config)#int Lo9
+R3(config-if)#ip address 192.168.33.9 255.255.255.252
+R3(config-if)#no shutdown
+R3(config-if)#end
+R3#conf t
+R3(config)#int Lo13
+R3(config-if)#ip address 192.168.33.13 255.255.255.252
+R3(config-if)#no shutdown
+R3(config-if)#end
+R3#conf t
+R3(config)#router eigrp 1
+R3(config-router)#network 192.168.33.0 0.0.0.3
+R3(config-router)#network 192.168.33.5 0.0.0.3
+R3(config-router)#network 192.168.33.9 0.0.0.3
+R3(config-router)#network 192.168.33.13 0.0.0.3
+R3#wr
+```
+</details>
+
+Проверим таблицу маршрутизации на R2 до и после включения автосуммирования на R1.
+
+<details>
+ <summary>До auto-sum R1</summary>
+
+``` bash
+R2#sh ip route eigrp | incl 192.168.11
+      192.168.11.0/30 is subnetted, 4 subnets
+D        192.168.11.0 [90/3139840] via 192.168.12.1, 00:02:41, Serial1/0
+D        192.168.11.4 [90/3139840] via 192.168.12.1, 00:02:41, Serial1/0
+D        192.168.11.8 [90/3139840] via 192.168.12.1, 00:02:41, Serial1/0
+D        192.168.11.12 [90/3139840] via 192.168.12.1, 00:02:41, Serial1/0
+```
+</details>
+<details>
+ <summary>После auto-sum R1</summary>
+
+``` bash
+R2#sh ip route eigrp | incl 192.168.11
+D     192.168.11.0/24 [90/3139840] via 192.168.12.1, 00:00:14, Serial1/0
+```
+</details>
+
+### Часть 4. Настройка и распространение статического маршрута по умолчанию
+
+Настроим статический маршрут по-умолчанию на R2 и анонсируем его через EIGRP.
+
+<details>
+ <summary>Static route R2</summary>
+
+``` bash
+R2(config)#ip route 0.0.0.0 0.0.0.0 Lo1
+
+R2(config)#router eigrp 1
+R2(config-router)#redistribute static
+
+R2#sh ip protocols | sec Redi
+  Redistributing: static
+
+R2#sh ip protocols | sec Distan
+      Distance: internal 90 external 170
+    Gateway         Distance      Last Update
+  Distance: internal 90 external 170
+
+```
+</details>
