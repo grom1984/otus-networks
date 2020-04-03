@@ -41,7 +41,7 @@
     <td>E0/0</td>
     <td>192.168.1.1</td>
     <td>255.255.255.0</td>
-    <td rowspan="9"></td>
+    <td rowspan="18"></td>
   </tr>
   <tr>
     <td>S1/0 (DCE)</td>
@@ -191,7 +191,7 @@ R1(config-if)#end
 R1#
 R1#conf t
 R1(config)#int s1/0
-R1(config-if)#no ip address 192.168.12.1 255.255.255.252
+R1(config-if)#ip address 192.168.12.1 255.255.255.252
 Invalid address
 R1(config-if)#clock rate 128000
 R1(config-if)#no shutdown
@@ -199,32 +199,8 @@ R1(config-if)#end
 R1#
 R1#conf t
 R1(config)#int s1/1
-R1(config-if)#no ip address 192.168.13.1 255.255.255.252
+R1(config-if)#ip address 192.168.13.1 255.255.255.252
 Invalid address
-R1(config-if)#no shutdown
-R1(config-if)#end
-R1#
-R1#conf t
-R1(config)#int Lo1
-R1(config-if)#ip address 192.168.11.1 255.255.255.252
-R1(config-if)#no shutdown
-R1(config-if)#end
-R1#
-R1#conf t
-R1(config)#int Lo5
-R1(config-if)#ip address 192.168.11.5 255.255.255.252
-R1(config-if)#no shutdown
-R1(config-if)#end
-R1#
-R1#conf t
-R1(config)#int Lo9
-R1(config-if)#ip address 192.168.11.9 255.255.255.252
-R1(config-if)#no shutdown
-R1(config-if)#end
-R1#
-R1#conf t
-R1(config)#int Lo13
-R1(config-if)#ip address 192.168.11.13 255.255.255.252
 R1(config-if)#no shutdown
 R1(config-if)#end
 R1#wr
@@ -268,22 +244,16 @@ R2(config-if)#end
 R2#
 R2#conf t
 R2(config)#int s1/0
-R2(config-if)#no ip address 192.168.12.2 255.255.255.252
+R2(config-if)#ip address 192.168.12.2 255.255.255.252
 Invalid address
 R2(config-if)#no shutdown
 R2(config-if)#end
 R2#
 R2#conf t
 R2(config)#int s1/1
-R2(config-if)#no ip address 192.168.23.1 255.255.255.252
+R2(config-if)#ip address 192.168.23.1 255.255.255.252
 Invalid address
 R2(config-if)#clock rate 128000
-R2(config-if)#no shutdown
-R2(config-if)#end
-R2#
-R2#conf t
-R2(config)#int Lo1
-R2(config-if)#ip address 192.168.22.1 255.255.255.252
 R2(config-if)#no shutdown
 R2(config-if)#end
 R2#wr
@@ -326,7 +296,7 @@ R3(config-if)#end
 R3#
 R3#conf t
 R3(config)#int s1/0
-R3(config-if)#no ip address 192.168.13.2 255.255.255.252
+R3(config-if)#ip address 192.168.13.2 255.255.255.252
 Invalid address
 R3(config-if)#clock rate 128000
 R3(config-if)#no shutdown
@@ -334,32 +304,8 @@ R3(config-if)#end
 R3#
 R3#conf t
 R3(config)#int s1/1
-R3(config-if)#no ip address 192.168.23.2 255.255.255.252
+R3(config-if)#ip address 192.168.23.2 255.255.255.252
 Invalid address
-R3(config-if)#no shutdown
-R3(config-if)#end
-R3#
-R3#conf t
-R3(config)#int Lo1
-R3(config-if)#ip address 192.168.33.1 255.255.255.252
-R3(config-if)#no shutdown
-R3(config-if)#end
-R3#
-R3#conf t
-R3(config)#int Lo5
-R3(config-if)#ip address 192.168.33.5 255.255.255.252
-R3(config-if)#no shutdown
-R3(config-if)#end
-R3#
-R3#conf t
-R3(config)#int Lo9
-R3(config-if)#ip address 192.168.33.9 255.255.255.252
-R3(config-if)#no shutdown
-R3(config-if)#end
-R3#
-R3#conf t
-R3(config)#int Lo13
-R3(config-if)#ip address 192.168.33.13 255.255.255.252
 R3(config-if)#no shutdown
 R3(config-if)#end
 R3#wr
@@ -397,3 +343,87 @@ PC1 : 192.168.3.3 255.255.255.0 gateway 192.168.3.1
 ```
 </details>
 
+### Часть 2. Настройка EIGRP и проверка подключения
+
+<details>
+ <summary>Настройка EIGRP R1</summary>
+
+``` bash
+R1#conf t
+R1(config)#router eigrp 1
+R1(config-router)#network 192.168.1.0 0.0.0.255
+R1(config-router)#network 192.168.12.0 0.0.0.3
+R1(config-router)#network 192.168.13.0 0.0.0.3
+R1(config-router)#network 192.168.11.0 0.0.0.3
+R1(config-router)#network 192.168.11.5 0.0.0.3
+R1(config-router)#network 192.168.11.9 0.0.0.3
+R1(config-router)#network 192.168.11.13 0.0.0.3
+R1(config-router)#passive-interface e0/0
+R1(config)#exit
+R1(config)#int s1/0
+R1(config-if)#band
+R1(config-if)#bandwidth 1024
+R1(config-if)#int s1/1
+R1(config-if)#band
+R1(config-if)#bandwidth 64
+R1(config-if)#end
+R1#wr
+```
+</details>
+
+<details>
+ <summary>Настройка EIGRP R2</summary>
+
+``` bash
+R2#conf t
+R2(config)#router eigrp 1
+R2(config-router)#network 192.168.2.0
+R2(config-router)#network 192.168.12.0 0.0.0.3
+R2(config-router)#network 192.168.23.0 0.0.0.3
+R2(config-router)#network 192.168.22.0 0.0.0.3
+R2(config-router)#passive-interface e0/0
+R2(config-router)#exit
+R2(config)#int s1/0
+R2(config-if)#band
+R2(config-if)#bandwidth 1024
+R2(config-if)#int s1/1
+R2(config-if)#band
+R2(config-if)#bandwidth 1544
+R2(config-if)#end
+R2#wr
+```
+</details>
+
+<details>
+ <summary>Настройка EIGRP R3</summary>
+
+``` bash
+R3#conf t
+R3(config)#router eigrp 1
+R3(config-router)#network 192.168.3.0
+R3(config-router)#network 192.168.13.0 0.0.0.3
+R3(config-router)#network 192.168.23.0 0.0.0.3
+R3(config-router)#network 192.168.33.0 0.0.0.3
+R3(config-router)#network 192.168.33.5 0.0.0.3
+R3(config-router)#network 192.168.33.9 0.0.0.3
+R3(config-router)#network 192.168.33.13 0.0.0.3
+R3(config-router)#passive-interface e0/0
+R3(config-router)#exit
+R3(config)#int s1/0
+R3(config-if)#band
+R3(config-if)#bandwidth 64
+R3(config-if)#int s1/1
+R3(config-if)#band
+R3(config-if)#bandwidth 1544
+R3(config-if)#end
+R3#wr
+```
+</details>
+
+<details>
+ <summary>Проверка доступности хостов между собой</summary>
+
+![ping](ping.png)
+</details>
+
+### Часть 3. Настройка EIGRP для автоматического объединения
