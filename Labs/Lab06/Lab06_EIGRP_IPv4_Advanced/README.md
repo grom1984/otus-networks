@@ -11,7 +11,7 @@
 
 #### Часть 3. [Настройка EIGRP для автоматического объединения](README.md#часть-3-настройка-eigrp-для-автоматического-объединения-1)
 
-#### Часть 4. [Настройка и распространение статического маршрута по умолчанию](README.md#часть-4-настройка-и-распространение-статического-маршрута-по-умолчанию-1)
+#### Часть 4. [Настройка и распространение статического маршрута по умолчанию](README.md#часть-4-настройка-ираспространение-статического-маршрута-по-умолчанию-1)
 
 #### Часть 5. [Выполнение точной настройки EIGRP](README.md#часть-5-выполнение-точной-настройки-eigrp-1)
 
@@ -511,7 +511,9 @@ R3#wr
 Проверим таблицу маршрутизации на R2 до и после включения автосуммирования на R1.
 
 <details>
- <summary>До auto-sum R1</summary>
+ <summary>auto-summary R1 [Выкл/Вкл]</summary>
+
+Выкл
 
 ``` bash
 R2#sh ip route eigrp | incl 192.168.11
@@ -521,10 +523,7 @@ D        192.168.11.4 [90/3139840] via 192.168.12.1, 00:02:41, Serial1/0
 D        192.168.11.8 [90/3139840] via 192.168.12.1, 00:02:41, Serial1/0
 D        192.168.11.12 [90/3139840] via 192.168.12.1, 00:02:41, Serial1/0
 ```
-</details>
-<details>
- <summary>После auto-sum R1</summary>
-
+Вкл
 ``` bash
 R2#sh ip route eigrp | incl 192.168.11
 D     192.168.11.0/24 [90/3139840] via 192.168.12.1, 00:00:14, Serial1/0
@@ -554,3 +553,72 @@ R2#sh ip protocols | sec Distan
 
 ```
 </details>
+
+### Часть 5. Выполнение точной настройки EIGRP
+
+Ограничим пропускную способность портов на отправку eigrp-пакетов R1<->R2 и R1<->R3.
+Настроим значения интервалов отправки hello и hold-time пакетов через последовательные интерфейсы, в 60 и 180 секунд, соответственно. (по-умолчанию 5 и 15).
+
+<details>
+ <summary>R1</summary>
+
+``` bash
+R1#conf t
+R1(config)#int s1/0
+R1(config-if)#ip bandwidth-percent eigrp 1 75
+R1(config)#int s1/1
+R1(config-if)#ip bandwidth-percent eigrp 1 40
+R1(config)#int s1/0
+R1(config-if)#ip hello-interval eigrp 1 60
+R1(config-if)#ip hold-time eigrp 1 180
+R1(config)#int s1/1
+R1(config-if)#ip hello-interval eigrp 1 60
+R1(config-if)#ip hold-time eigrp 1 180
+R1(config-if)#end
+
+```
+</details>
+
+<details>
+ <summary>R2</summary>
+
+``` bash
+R2#conf t
+R2(config)#int s1/0
+R2(config-if)#ip bandwidth-percent eigrp 1 75
+R2(config)#int s1/0
+R2(config-if)#ip hello-interval eigrp 1 60
+R2(config-if)#ip hold-time eigrp 1 180
+R2(config-if)#int s1/1
+R2(config-if)#ip hello-interval eigrp 1 60
+R2(config-if)#ip hold-time eigrp 1 180
+R2(config-if)#end
+R2#wr
+
+```
+</details>
+
+<details>
+ <summary>R3</summary>
+
+``` bash
+R3(config)#int s1/0
+R3(config-if)#ip bandwidth-percent eigrp 1 40
+R3(config)#int s1/0
+R3(config-if)#ip hello-interval eigrp 1 60
+R3(config-if)#ip hold-time eigrp 1 180
+R3(config-if)#int s1/1
+R3(config-if)#ip hello-interval eigrp 1 60
+R3(config-if)#ip hold-time eigrp 1 180
+```
+</details>
+
+### Вопросы для повторения
+
+1. В чем заключаются преимущества объединения маршрутов?
+> Сокращение таблицы маршрутизации, и как следствие, уменьшение нагрузки на процессор маршрутизатора и экономия ОЗУ.
+
+2. Почему при настройке таймеров EIGRP необходимо настраивать значение времени удержания равным или больше интервала приветствия?
+> Иначе маршрутизатор будет считать соседа недоступным, удалит его из своей таблицы соседей. Начнётся пересчёт маршрутов, сеть будет работать нестабильно.
+
+### Конфигурационные файлы [здесь](config/).
