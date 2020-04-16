@@ -308,11 +308,11 @@ R28          | E0/0   | IPv6 LL | FE80::28/10                | FE80::/10        
 R28          | E0/1   | IPv4    | 87.250.250.98/27           | 87.250.250.96/27         | R28 to R25
 R28          | E0/1   | IPv6    | 2001:FFCC:3000:2528::28/64 | 2001:FFCC:3000:2528::/64 | R28 to R25
 R28          | E0/1   | IPv6 LL | FE80::28/10                | FE80::/10                | Link-local e0/1
-R28          | E0/2.3 | IPv4    | 10.12.3.2/24               | 10.12.3.0/24             | R28 to SW29
-R28          | E0/2.3 | IPv6    | 2001:FFCC:3000:3::2/64     | 2001:FFCC:3000:3::/64    | R28 to SW29
+R28          | E0/2.3 | IPv4    | 10.12.3.1/24               | 10.12.3.0/24             | R28 to SW29
+R28          | E0/2.3 | IPv6    | 2001:FFCC:3000:3::1/64     | 2001:FFCC:3000:1::/64    | R28 to SW29
 R28          | E0/2.3 | IPv6 LL | FE80::28/10                | FE80::/10                | Link-local e0/2.3
-R28          | E0/2.4 | IPv4    | 10.12.4.2/24               | 10.12.4.0/24             | R28 to SW29
-R28          | E0/2.4 | IPv6    | 2001:FFCC:3000:4::2/64     | 2001:FFCC:3000:4::/64    | R28 to SW29
+R28          | E0/2.4 | IPv4    | 10.12.4.1/24               | 10.12.4.0/24             | R28 to SW29
+R28          | E0/2.4 | IPv6    | 2001:FFCC:3000:4::1/64     | 2001:FFCC:3000:4::/64    | R28 to SW29
 R28          | E0/2.4 | IPv6 LL | FE80::28/10                | FE80::/10                | Link-local e0/2.4
 R32          | E0/0   | IPv4    | 10.10.13.32/24             | 10.10.13.0/24            | R32 to R16
 R32          | E0/0   | IPv6    | 2001:FFCC:2000:1632::32/64 | 2001:FFCC:2000:1632::/64 | R32 to R16
@@ -324,6 +324,138 @@ R32          | E0/0   | IPv6 LL | FE80::32/10                | FE80::/10        
 
 ![network_addr](network_addr.png)
 
+Изменения на маршрутизаторах/коммутаторах сводятся к:
+
+- Включению ipv6 unicast-routing (ipv4 unicast-routing по-умолчанию включен);
+- Включению ipv6 на интерфейсах (ipv4 по-умолчанию включен);
+- Назначению адресов ipv4 и ipv6 на интерфейсах;
+- Включению самих интерфейсов (физические интерфейсы по-умолчанию выключены);
+- Объединению двойных линков (на коммутаторах) в EtherChannel (PAgP).
+
+<details>
+ <summary>Пример настройки маршрутизатора R12</summary>
+
+``` bash
+conf t
+hostname R12
+no ip domain-lookup
+
+ipv6 unicast-routing
+
+interface Ethernet0/0.2
+  description "R12 to SW4 (Vlan2)"
+  ip address 10.0.2.2 255.255.255.0
+  ipv6 address FE80::12 link-local
+  ipv6 address 2001:FFCC:1000:2::2/64
+  ipv6 enable
+  no shutdown
+  exit
+interface Ethernet0/0.3
+  description "R12 to SW4  (Vlan3)"
+  ip address 10.0.3.2 255.255.255.0
+  ipv6 address FE80::12 link-local
+  ipv6 address 2001:FFCC:1000:3::2/64
+  ipv6 enable
+  no shutdown
+  exit
+interface Ethernet0/1.2
+  description "R12 to SW2  (Vlan2)"
+  ip address 10.0.2.3 255.255.255.0
+  ipv6 address FE80::12 link-local
+  ipv6 address 2001:FFCC:1000:2::3/64
+  ipv6 enable
+  no shutdown
+  exit
+interface Ethernet0/1.3
+  description "R12 to SW2  (Vlan3)"
+  ip address 10.0.3.3 255.255.255.0
+  ipv6 address FE80::12 link-local
+  ipv6 address 2001:FFCC:1000:3::3/64
+  ipv6 enable
+  no shutdown
+  exit
+interface Ethernet0/2
+  description "R12 to R14"
+  ip address 10.1.2.12 255.255.254.0
+  ipv6 address FE80::12 link-local
+  ipv6 address 2001:FFCC:1000:1214::12/64
+  ipv6 enable
+  no shutdown
+  exit
+interface Ethernet0/2
+  description "R12 to R14"
+  ip address 10.1.2.12 255.255.254.0
+  ipv6 address FE80::12 link-local
+  ipv6 address 2001:FFCC:1000:1214::12/64
+  ipv6 enable
+  no shutdown
+  exit
+interface Ethernet0/3
+  description "R12 to R15"
+  ip address 10.1.6.12 255.255.254.0
+  ipv6 address FE80::12 link-local
+  ipv6 address 2001:FFCC:1000:1215::12/64
+  ipv6 enable
+  no shutdown
+  exit
+end
+
+```
+</details>
+
+<details>
+ <summary>Пример настройки коммутатора SW4</summary>
+
+``` bash
+conf t
+hostname SW4
+no ip domain-lookup
+vtp mode transparent
+banner motd #Enter to SW4 settings#
+ipv6 unicast-routing
+
+vlan 2,3,999
+
+int vlan 2
+no shutdown
+
+int vlan 3
+no shutdown
+
+int vlan 999
+ip address 172.16.0.4 255.252.0.0
+ipv6 address FD00::4/8
+ipv6 enable
+no shutdown
+
+int e0/0
+switchport access vlan 2
+no shutdown
+
+int range e0/0-1, e1/0-1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport trunk allowed vlan 2,3,999
+no shutdown
+
+#######
+#PAgP
+#ethernet-порты
+interface range e0/2-3
+channel-group 45 mode auto
+no shut
+
+#EtherChannel-порт 45
+interface port-channel 45
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport trunk native vlan 999
+no shut
+
+#######
+
+```
+</details>
 
 ### 4. Настроить VLAN управления для сетевых устройств
 
