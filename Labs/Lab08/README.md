@@ -70,31 +70,123 @@ S*    0.0.0.0/0 [1/0] via 87.250.250.97
  <summary>Настройка PBR на R28</summary>
 
 ``` bash
+#######
+# ACL #
+#######
+
 ip access-list standard ACL_PBR_TO_R25
   permit 10.12.1.0 0.0.254.255
+  deny any
+  exit
+ipv6 access-list standard ACL_PBR_TO_R25-v6
+  permit 2001:FFCC:3000:3::/64
   deny any
   exit
 ip access-list standard ACL_PBR_TO_R26
   permit 10.12.0.0 0.0.254.255
   deny any
   exit
+ipv6 access-list standard ACL_PBR_TO_R26-v6
+  permit 2001:FFCC:3000:4::/64
+  deny any
+  exit
+
+##############
+# Route-map  #
+##############
+
 route-map PBR_TO_R25 permit 10
   match ip address ACL_PBR_TO_R25
-  set ip next-hop 5.255.255.33
+  set ip next-hop 87.250.250.97
   exit
+route-map PBR_TO_R25-v6 permit 10
+  match ip address ACL_PBR_TO_R25-v6
+  set ip next-hop 2001:FFCC:3000:2528::25
+  exit
+
 route-map PBR_TO_R26 permit 10
-  match ip address ACL_PBR_TO_R25
-  set ip next-hop 5.255.255.65
+  match ip address ACL_PBR_TO_R26
+  set ip next-hop 87.250.250.65
   exit
+route-map PBR_TO_R26-v6 permit 10
+  match ip address ACL_PBR_TO_R26-v6
+  set ip next-hop 2001:FFCC:3000:2628::26
+  exit
+
+#############
+# Interface #
+#############
+
 int e0/1
   ip policy route-map PBR_TO_R25
+  ipv6 policy route-map PBR_TO_R25-v6
 exit
+
 int e0/0
   ip policy route-map PBR_TO_R26
+  ipv6 policy route-map PBR_TO_R26-v6
 exit
 
 ```
 </details>
 
+### 3. Настроить отслеживание линка через технологию IP SLA
+
+Привяжем тесты IP SLA к PBR. Теперь выполнение route-map будет зависеть от результатов тестирования. 
+<details>
+ <summary>Настройка IP SLA на R28</summary>
+
+``` bash
+
+##############
+# Route-map  #
+##############
+route-map PBR_TO_R25 permit 10
+  match ip address ACL_PBR_TO_R25
+  set ip next-hop verify-availability 87.250.250.97 1 track 25
+  exit
+
+route-map PBR_TO_R25-v6 permit 10
+  match ip address ACL_PBR_TO_R25-v6
+  set ip next-hop verify-availability 2001:FFCC:3000:2528::25 1 track 256
+  exit
+
+route-map PBR_TO_R26 permit 10
+  match ip address ACL_PBR_TO_R26
+  set ip next-hop verify-availability 87.250.250.65 1 track 26
+  exit
+
+route-map PBR_TO_R26-v6 permit 10
+  match ip address ACL_PBR_TO_R26-v6
+  set ip next-hop verify-availability 2001:FFCC:3000:2628::26 1 track 266
+  exit
+###########
+## IP SLA #
+###########
+  ip sla 25
+  icmp-echo 87.250.250.97 source-interface e0/1
+  frequency 15
+ip sla schedule 25 life forever start-time now
+track 25 ip sla reachability
+
+ip sla 256
+  icmp-echo 2001:FFCC:3000:2528::25 source-interface e0/1
+  frequency 15
+ip sla schedule 256 life forever start-time now
+track 256 ip sla reachability
+
+ip sla 26
+  icmp-echo 87.250.250.65 source-interface e0/0
+  frequency 15
+ip sla schedule 26 life forever start-time now
+track 26 ip sla reachability
+
+ip sla 266
+  icmp-echo 2001:FFCC:3000:2628::26 source-interface e0/0
+  frequency 15
+ip sla schedule 266 life forever start-time now
+track 266 ip sla reachability
+```
+</details>
 
 ### Конфигурационные файлы [здесь](config/)
