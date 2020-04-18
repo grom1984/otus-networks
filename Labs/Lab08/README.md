@@ -78,17 +78,17 @@ ip access-list standard ACL_PBR_TO_R25
   permit 10.12.1.0 0.0.254.255
   deny any
   exit
-ipv6 access-list standard ACL_PBR_TO_R25-v6
-  permit 2001:FFCC:3000:3::/64
-  deny any
+ipv6 access-list ACL_PBR_TO_R25-v6
+  permit 2001:FFCC:3000:3::/64 any
+  deny any any
   exit
 ip access-list standard ACL_PBR_TO_R26
   permit 10.12.0.0 0.0.254.255
   deny any
   exit
-ipv6 access-list standard ACL_PBR_TO_R26-v6
-  permit 2001:FFCC:3000:4::/64
-  deny any
+ipv6 access-list ACL_PBR_TO_R26-v6
+  permit 2001:FFCC:3000:4::/64 any
+  deny any any
   exit
 
 ##############
@@ -147,8 +147,8 @@ route-map PBR_TO_R25 permit 10
   exit
 
 route-map PBR_TO_R25-v6 permit 10
-  match ip address ACL_PBR_TO_R25-v6
-  set ip next-hop verify-availability 2001:FFCC:3000:2528::25 1 track 256
+  match ipv6 address ACL_PBR_TO_R25-v6
+  set ipv6 next-hop 2001:FFCC:3000:2528::25
   exit
 
 route-map PBR_TO_R26 permit 10
@@ -157,8 +157,8 @@ route-map PBR_TO_R26 permit 10
   exit
 
 route-map PBR_TO_R26-v6 permit 10
-  match ip address ACL_PBR_TO_R26-v6
-  set ip next-hop verify-availability 2001:FFCC:3000:2628::26 1 track 266
+  match ipv6 address ACL_PBR_TO_R26-v6
+  set ipv6 next-hop 2001:FFCC:3000:2628::26
   exit
 ###########
 ## IP SLA #
@@ -167,25 +167,25 @@ route-map PBR_TO_R26-v6 permit 10
   icmp-echo 87.250.250.97 source-interface e0/1
   frequency 15
 ip sla schedule 25 life forever start-time now
-track 25 ip sla reachability
+track 25 ip sla 25 reachability
 
 ip sla 256
   icmp-echo 2001:FFCC:3000:2528::25 source-interface e0/1
   frequency 15
 ip sla schedule 256 life forever start-time now
-track 256 ip sla reachability
+track 256 ip sla 256 reachability
 
 ip sla 26
   icmp-echo 87.250.250.65 source-interface e0/0
   frequency 15
 ip sla schedule 26 life forever start-time now
-track 26 ip sla reachability
+track 26 ip sla 26 reachability
 
 ip sla 266
   icmp-echo 2001:FFCC:3000:2628::26 source-interface e0/0
   frequency 15
 ip sla schedule 266 life forever start-time now
-track 266 ip sla reachability
+track 266 ip sla 266 reachability
 ```
 </details>
 
