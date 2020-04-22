@@ -143,10 +143,61 @@ R19#
 
 #### 4. Маршрутизатор R20 должен находиться в зоне 102 и получать все маршруты, кроме маршрутов до сетей зоны 101.
 
+Настройка фильтрации сводится к настройке _prefix-list_ на пограничном роутере R15. Запретим передачу префикса зоны 101 в зону 102 и разрешим остальные.
+
 <details>
- <summary>Настройка R20</summary>
+ <summary>Настройка R15</summary>
 
 ``` bash
+conf t
+ip prefix-list TO_R20_102 deny 10.1.0.0/23
+ip prefix-list TO_R20_102 permit 0.0.0.0/0 le 32
+
+router ospf 1
+ area 102 filter-list prefix TO_R20_102 in
+
 
 ```
+</details>
+
+<details>
+ <summary>Таблица маршрутизации R20</summary>
+
+#### До
+``` bash
+R20#sh ip route ospf
+
+Gateway of last resort is 10.1.10.15 to network 0.0.0.0
+
+O*E2  0.0.0.0/0 [110/1] via 10.1.10.15, 03:10:02, Ethernet0/0
+      10.0.0.0/8 is variably subnetted, 10 subnets, 3 masks
+O IA     10.0.2.0/24 [110/30] via 10.1.10.15, 03:10:02, Ethernet0/0
+O IA     10.0.3.0/24 [110/30] via 10.1.10.15, 03:10:02, Ethernet0/0
+O IA     10.1.0.0/23 [110/30] via 10.1.10.15, 02:34:34, Ethernet0/0
+O IA     10.1.2.0/23 [110/30] via 10.1.10.15, 03:10:02, Ethernet0/0
+O IA     10.1.4.0/23 [110/30] via 10.1.10.15, 03:10:02, Ethernet0/0
+O IA     10.1.6.0/23 [110/20] via 10.1.10.15, 03:10:02, Ethernet0/0
+O IA     10.1.8.0/23 [110/20] via 10.1.10.15, 03:10:02, Ethernet0/0
+O IA     10.1.12.0/24 [110/20] via 10.1.10.15, 03:10:02, Ethernet0/0
+
+```
+
+#### После
+
+``` bash
+R20#sh ip route ospf
+
+Gateway of last resort is 10.1.10.15 to network 0.0.0.0
+
+O*E2  0.0.0.0/0 [110/1] via 10.1.10.15, 03:34:10, Ethernet0/0
+      10.0.0.0/8 is variably subnetted, 9 subnets, 3 masks
+O IA     10.0.2.0/24 [110/30] via 10.1.10.15, 00:01:02, Ethernet0/0
+O IA     10.0.3.0/24 [110/30] via 10.1.10.15, 00:01:02, Ethernet0/0
+O IA     10.1.2.0/23 [110/30] via 10.1.10.15, 00:01:02, Ethernet0/0
+O IA     10.1.4.0/23 [110/30] via 10.1.10.15, 00:01:02, Ethernet0/0
+O IA     10.1.6.0/23 [110/20] via 10.1.10.15, 00:01:02, Ethernet0/0
+O IA     10.1.8.0/23 [110/20] via 10.1.10.15, 00:01:02, Ethernet0/0
+O IA     10.1.12.0/24 [110/20] via 10.1.10.15, 00:01:02, Ethernet0/0
+```
+
 </details>
