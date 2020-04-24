@@ -25,3 +25,14 @@
 Например, __router-id__ для __R14__ в московском офисе будет __0.0.1.14__
 
 
+<details>
+ <summary>Пример настройки R</summary>
+
+``` bash
+conf t
+ ip prefix-list TO_R19_101 deny 10.0.0.0/8
+ router ospf 1
+ area 101 filter-list prefix TO_R19_101 in
+exit
+```
+</details>
