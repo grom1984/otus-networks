@@ -36,7 +36,8 @@ conf t
 ipv6 router ospf 1
  router-id 0.0.1.14
  passive-interface e0/2
- 
+ default-information originate
+
 int e0/0
  ipv6 ospf 1 area 10
  ipv6 ospf hello-interval 10
