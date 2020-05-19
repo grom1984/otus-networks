@@ -6,7 +6,6 @@
 3. Настроить eBGP между Ламас и Триада
 4. eBGP между офисом С.-Петербург и провайдером Триада
 5. Организовать IP доступность между офисами Москва и С.-Петербург
-6. Настроить отслеживание линка через технологию IP SLA
 
 Конфигурационные файлы [здесь](config/)
 
@@ -65,9 +64,17 @@
 #################
 
 conf t
-router bgp 1001
-neighbor 7.7.7.22 remote-as 101
-neighbor 2001:FFCC:1000:1422::22 remote-as 101
+ router bgp 1001
+  neighbor 7.7.7.22 remote-as 101
+  neighbor 2001:FFCC:1000:1422::22 remote-as 101
+
+ address-family ipv4
+  neighbor 7.7.7.22 activate
+  no neighbor 2001:FFCC:1000:1422::22 activate
+
+ address-family ipv6
+  neighbor 2001:FFCC:1000:1422::22 activate
+
 
 #################
 # Настройки R22 #
@@ -75,9 +82,22 @@ neighbor 2001:FFCC:1000:1422::22 remote-as 101
 
 conf t
 router bgp 101
-neighbor 7.7.7.14 remote-as 1001
-neighbor 2001:FFCC:1000:1422::14 remote-as 1001
+ neighbor 7.7.7.14 remote-as 1001
+ neighbor 2001:FFCC:1000:1422::14 remote-as 1001
 
+address-family ipv4
+ neighbor 7.7.7.14 activate
+ no neighbor 2001:FFCC:1000:1422::14 activate
+ network 7.7.7.0 mask 255.255.255.224
+ network 212.188.8.48 mask 255.255.255.248
+ network 217.118.87.96 mask 255.255.255.248
+ 
+ 
+address-family ipv6
+ neighbor 2001:FFCC:1000:1422::14 activate
+ network 2001:FFCC:1000:1422::/64
+ network 2001:FFCC:5000:2122::/64
+ network 2001:FFCC:6000:2223::/64
 ```
 </details>
 
@@ -99,6 +119,13 @@ router bgp 301
 neighbor 212.188.8.50 remote-as 101
 neighbor 2001:FFCC:5000:2122::22 remote-as 101
 
+address-family ipv4
+ neighbor 212.188.8.50 activate
+ no neighbor 2001:FFCC:5000:2122::22 activate
+  
+address-family ipv6
+ neighbor 2001:FFCC:5000:2122::22 activate
+ 
 #################
 # Настройки R22 #
 #################
@@ -107,6 +134,19 @@ conf t
 router bgp 101
 neighbor 212.188.8.49 remote-as 301
 neighbor 2001:FFCC:5000:2122::21 remote-as 301
+
+address-family ipv4
+ neighbor 212.188.8.49 activate
+ no neighbor 2001:FFCC:5000:2122::21 activate
+ network 7.7.7.0 mask 255.255.255.224
+ network 212.188.8.48 mask 255.255.255.248
+ network 217.118.87.96 mask 255.255.255.248
+
+address-family ipv6
+ neighbor 2001:FFCC:5000:2122::21 activate
+ network 2001:FFCC:1000:1422::/64
+ network 2001:FFCC:5000:2122::/64
+ network 2001:FFCC:6000:2223::/64
 
 ```
 </details>
@@ -128,6 +168,14 @@ router bgp 301
 neighbor 178.248.237.50 remote-as 520
 neighbor 2001:FFCC:7000:2124::24 remote-as 520
 
+address-family ipv4
+ neighbor 178.248.237.50 activate
+ no neighbor 2001:FFCC:7000:2124::24 activate
+  
+address-family ipv6
+ neighbor 2001:FFCC:7000:2124::24 activate
+
+
 #################
 # Настройки R24 #
 #################
@@ -136,6 +184,21 @@ conf t
 router bgp 520
 neighbor 178.248.237.49 remote-as 301
 neighbor 2001:FFCC:7000:2124::21 remote-as 301
+
+address-family ipv4
+ neighbor 178.248.237.49 activate
+ no neighbor 2001:FFCC:7000:2124::21 activate
+ network 178.248.237.48 mask 255.255.255.248
+ network 83.239.45.48 mask 255.255.255.240
+ network 83.239.45.32 mask 255.255.255.240
+ network 87.250.250.0 mask 255.255.255.224
+ 
+address-family ipv6
+ neighbor 2001:FFCC:7000:2124::21 activate
+ network 2001:FFCC:7000:2124::/64
+ network 2001:FFCC:8000:2324::/64
+ network 2001:FFCC:8000:2426::/64
+ network 2001:FFCC:2000:1824::/64
 
 ```
 </details>
@@ -154,10 +217,20 @@ neighbor 2001:FFCC:7000:2124::21 remote-as 301
 
 conf t
 router bgp 2042
-neighbor 87.250.250.24 remote-as 520
-neighbor 2001:FFCC:2000:1824::24 remote-as 520
-neighbor 82.208.114.26 remote-as 520
-neighbor 2001:FFCC:2000:1826::26 remote-as 520
+ neighbor 87.250.250.24 remote-as 520
+ neighbor 2001:FFCC:2000:1824::24 remote-as 520
+ neighbor 82.208.114.26 remote-as 520
+ neighbor 2001:FFCC:2000:1826::26 remote-as 520
+
+address-family ipv4
+ neighbor 87.250.250.24 activate
+ neighbor 82.208.114.26 activate
+ no neighbor 2001:FFCC:2000:1824::24 activate
+ no neighbor 2001:FFCC:2000:1826::26 activate
+address-family ipv6
+ neighbor 2001:FFCC:2000:1824::24 activate
+ neighbor 2001:FFCC:2000:1826::26 activate
+
 
 #################
 # Настройки R24 #
@@ -165,8 +238,23 @@ neighbor 2001:FFCC:2000:1826::26 remote-as 520
 
 conf t
 router bgp 520
-neighbor 87.250.250.18 remote-as 2042
-neighbor 2001:FFCC:2000:1824::18 remote-as 2042
+ neighbor 87.250.250.18 remote-as 2042
+ neighbor 2001:FFCC:2000:1824::18 remote-as 2042
+
+address-family ipv4
+ neighbor 87.250.250.18 activate
+ no neighbor 2001:FFCC:2000:1824::18 activate
+ network 178.248.237.48 mask 255.255.255.248
+ network 83.239.45.48 mask 255.255.255.240
+ network 83.239.45.32 mask 255.255.255.240
+ network 87.250.250.0 mask 255.255.255.224
+
+address-family ipv6
+ neighbor 2001:FFCC:2000:1824::18 activate
+ network 2001:FFCC:7000:2124::/64
+ network 2001:FFCC:8000:2324::/64
+ network 2001:FFCC:8000:2426::/64
+ network 2001:FFCC:2000:1824::/64
 
 #################
 # Настройки R26 #
@@ -174,102 +262,95 @@ neighbor 2001:FFCC:2000:1824::18 remote-as 2042
 
 conf t
 router bgp 520
-neighbor 82.208.114.18 remote-as 2042
-neighbor 2001:FFCC:2000:1826::18 remote-as 2042
+ neighbor 82.208.114.18 remote-as 2042
+ neighbor 2001:FFCC:2000:1826::18 remote-as 2042
+
+address-family ipv4
+ neighbor 82.208.114.18 activate
+ no neighbor 2001:FFCC:2000:1826::18 activate
+ network 82.208.114.0 mask 255.255.255.224
+ network 83.239.45.32 mask 255.255.255.240
+ network 83.239.45.16 mask 255.255.255.240
+ network 87.250.250.96 mask 255.255.255.224
+ 
+address-family ipv6
+ neighbor 2001:FFCC:2000:1826::18 activate
+ network 2001:FFCC:2000:1826::/64
+ network 2001:FFCC:8000:2426::/64
+ network 2001:FFCC:8000:2526::/64
+ network 2001:FFCC:3000:2628::/64
 
 
 ```
 </details>
 
-### 6. Настроить отслеживание линка через технологию IP SLA
+### 5. Организовать IP доступность между офисами Москва и С.-Петербург
 
-Настроим IP SLA для R18.
-На первом этапе пропишем маршрут по-умолчанию для двух линков (к R24 и R26). Чтобы работала автоматическая балансировка трафика укажем одинаковые метрики для обоих маршрутов. Затем распредлим трафик от между чётными/нечётными подсетями. Для "чётных" подсетей маршрут по-умолчанию будет через R26, для нечётных - через R24.Затем, настроим PBR и отслеживание линков через IP SLA.
+Проверим "видимость" между пограничными роутерами с помощью утилиты _ping_ \
+Выполним на R18:
+-  _ping 7.7.7.14_ [R14]
+-  _ping 2.2.2.15_ [R15]
 
-P.S. Для IPv6 нет параметра _verify-availability_ на эмуляторе eve-ng. Нет невозможности настроить IP SLA для ipv6.
+![ping](ping.png)
 
 <details>
- <summary>Настройка IP SLA на R18</summary>
+ <summary>Таблица роутинга eBGP R14</summary>
+
+``` bash
+R14#sh ip bgp
+BGP table version is 9, local router ID is 172.16.0.14
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  2.2.2.0/27       7.7.7.22                               0 101 301 i
+ r>  7.7.7.0/27       7.7.7.22                 0             0 101 i
+ *>  83.239.45.32/28  7.7.7.22                               0 101 301 520 i
+ *>  83.239.45.48/28  7.7.7.22                               0 101 301 520 i
+ *>  87.250.250.0/27  7.7.7.22                               0 101 301 520 i
+ *>  178.248.237.48/29
+                       7.7.7.22                               0 101 301 i
+ *>  212.188.8.48/29  7.7.7.22                 0             0 101 i
+ *>  217.118.87.96/29 7.7.7.22                 0             0 101 i
+R14#
+
+```
+
+</details>
+
+
+<details>
+ <summary>Таблица роутинга eBGP R18</summary>
 
 ``` bash
 
-#######
-# ACL #
-#######
+R18#sh ip bgp
+BGP table version is 11, local router ID is 172.16.0.18
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
 
-ip access-list standard ACL_PBR_TO_R24
-  permit 10.10.1.0 0.0.254.255
-  deny any
-  exit
-ipv6 access-list ACL_PBR_TO_R24-v6
-  permit 2001:FFCC:2000:3::/64 any
-  deny any any
-  exit
-ip access-list standard ACL_PBR_TO_R26
-  permit 10.10.0.0 0.0.254.255
-  deny any
-  exit
-ipv6 access-list ACL_PBR_TO_R26-v6
-  permit 2001:FFCC:3000:2::/64 any
-  deny any any
-  exit
-
-##############
-# Route-map  #
-##############
-
-route-map PBR_TO_R24 permit 10
-  match ip address ACL_PBR_TO_R24
-  set ip next-hop verify-availability 87.250.250.24 1 track 24
-  exit
-
-route-map PBR_TO_R24-v6 permit 10
-  match ipv6 address ACL_PBR_TO_R24-v6
-  set ipv6 next-hop 2001:FFCC:2000:1824::24
-  exit
-
-route-map PBR_TO_R26 permit 10
-  match ip address ACL_PBR_TO_R26
-  set ip next-hop verify-availability 82.208.114.26 1 track 26
-  exit
-
-route-map PBR_TO_R26-v6 permit 10
-  match ipv6 address ACL_PBR_TO_R26-v6
-  set ipv6 next-hop 2001:FFCC:2000:1826::26
-  exit
-
-###########
-## IP SLA #
-###########
-
-ip sla 24
-  icmp-echo 87.250.250.24 source-interface e0/2
-  frequency 15
-ip sla schedule 24 life forever start-time now
-track 24 ip sla 24 reachability
-
-ip sla 26
-  icmp-echo 82.208.114.26 source-interface e0/3
-  frequency 15
-ip sla schedule 26 life forever start-time now
-track 26 ip sla 26 reachability
-
-#############
-# Interface #
-#############
-
-int e0/2
-  ip policy route-map PBR_TO_R24
-  ipv6 policy route-map PBR_TO_R24-v6
-exit
-
-int e0/3
-  ip policy route-map PBR_TO_R26
-  ipv6 policy route-map PBR_TO_R26-v6
-exit
-
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  2.2.2.0/27       87.250.250.24                          0 520 301 i
+ *>  7.7.7.0/27       87.250.250.24                          0 520 301 101 i
+ r>  82.208.114.0/27  82.208.114.26            0             0 520 i
+ *>  83.239.45.16/28  82.208.114.26            0             0 520 i
+ *   83.239.45.32/28  82.208.114.26            0             0 520 i
+ *>                   87.250.250.24            0             0 520 i
+ *>  83.239.45.48/28  87.250.250.24            0             0 520 i
+ r>  87.250.250.0/27  87.250.250.24            0             0 520 i
+ *>  178.248.237.48/29
+                       87.250.250.24            0             0 520 i
+ *>  212.188.8.48/29  87.250.250.24                          0 520 301 i
+ *>  217.118.87.96/29 87.250.250.24                          0 520 301 101 i
 
 ```
+
 </details>
 
 
