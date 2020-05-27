@@ -20,19 +20,22 @@
 
 #### 1. Настроить iBGP в офисе Москва между маршрутизаторами R14 и R15
 
-Настроим на роутерах R14 и R15 параметры:
-- __router-id__ для BGP;
-- __next-hop-self__;
-- __update-source__;
-- __static route__ до сети соседнего ISP;
-
 Создадим Loopback-адреса для анонсов информации iBGP \
-ipv4: __100.0.[номер_офиса].[номер_роутера]__ \
-ipv6: __{префикс IPv6 для сайта}::{номер маршрутизатора}__\
-ipv6 LL: __FE80::[номер_роутера]__
+Номер Loopback-интерфейса равен номеру AS\
+Сетевые настройки для Loopback
+ipv4: 100.0.__[номер_офиса]__.__[номер_роутера]__ \
+ipv6: FC00::__{номер маршрутизатора}__\
+ipv6 LL: FE80::__[номер_роутера]__
 
-Добавим _ipv6 link-local_ адреса для интерфейсов _Loopback999_ на всех роутерах.
-__IPv6-адрес__ будет вычисляться исходя из формулы FE80::__[номер_роутера]__.
+Например, для маршрутизатора R14\
+ipv4: __100.0.1.14__\
+ipv6: __FC00:14/128__\
+ipv6 LL: __FE80::14__
+
+Настроим на роутерах R14 и R15 параметры:
+   - __next-hop-self__;
+   - __update-source__; (Loopback)
+
 
 <details>
  <summary>Настройки iBGP между R14-R15</summary>
@@ -44,68 +47,250 @@ __IPv6-адрес__ будет вычисляться исходя из форм
 
 conf t
 
-int Lo999
+interface Loopback1001
+ ip address 100.0.1.14 255.255.255.255
+ ipv6 enable
+ ipv6 address FC00::14/128
  ipv6 address FE80::14 link-local
 
 router bgp 1001
- bgp router-id 0.0.1.14
- neighbor 10.1.12.15 remote-as 1001
- neighbor 10.1.12.15 update-source Lo 999
- neighbor 10.1.12.15 next-hop-self
- neighbor 2001:FFCC:1000:1415::15 remote-as 1001
- neighbor 2001:FFCC:1000:1415::15 update-source LL
- neighbor 2001:FFCC:1000:1415::15 next-hop-self
+ neighbor 100.0.1.15 remote-as 1001
+ neighbor 100.0.1.15 update-source Loopback1001
+ neighbor 100.0.1.15 next-hop-self
+ neighbor FC00::15 remote-as 1001
+ neighbor FC00::15 update-source Loopback1001
+ neighbor FC00::15 next-hop-self
 
 address-family ipv4
- neighbor 10.1.12.15 activate
- neighbor 10.1.12.15 update-source Lo 999 activate
- neighbor 10.1.12.15 next-hop-self activate
- no neighbor 2001:FFCC:1000:1415::15 remote-as 1001 activate
- no neighbor 2001:FFCC:1000:1415::15 update-source LL activate
- no neighbor 2001:FFCC:1000:1415::15 next-hop-self activate
-
+ neighbor 100.0.1.15 activate
+ no neighbor FC00::15 activate
+ 
 address-family ipv6
- neighbor 2001:FFCC:1000:1415::15 remote-as 1001 activate
- neighbor 2001:FFCC:1000:1415::15 update-source LL activate
- neighbor 2001:FFCC:1000:1415::15 next-hop-self activate
+ no neighbor 100.0.1.15 activate
+ neighbor FC00::15 activate
 
-ip route 2.2.2.0 255.255.255.224 10.1.12.15 
+# Анонсируем loopback1001-интерфейс в OSPF и запретим его анонс через внешний интерфейс
+# Политика по-умолчанию passive-interface default
+
+router ospf 1
+ network 10.0.1.14 0.0.0.0 area 0
 
 #################
 # Настройки R15 #
 #################
 
 conf t
-int Lo999
+
+interface Loopback1001
+ ip address 100.0.1.15 255.255.255.255
+ ipv6 enable
+ ipv6 address FC00::15/128
  ipv6 address FE80::15 link-local
 
 router bgp 1001
- bgp router-id 0.0.1.15
- neighbor 10.1.12.14 remote-as 1001
- neighbor 10.1.12.14 update-source Lo 999
- neighbor 10.1.12.14 next-hop-self
- neighbor 2001:FFCC:1000:1415::14 remote-as 1001
- neighbor 2001:FFCC:1000:1415::14 update-source LL
- neighbor 2001:FFCC:1000:1415::14 next-hop-self
+ neighbor 100.0.1.14 remote-as 1001
+ neighbor 100.0.1.14 update-source Loopback1001
+ neighbor 100.0.1.14 next-hop-self
+ neighbor FC00::14 remote-as 1001
+ neighbor FC00::14 update-source Loopback1001
+ neighbor FC00::14 next-hop-self
 
 address-family ipv4
- neighbor 10.1.12.14 remote-as 1001 activate
- neighbor 10.1.12.14 update-source Lo 999 activate
- neighbor 10.1.12.14 next-hop-self activate
- no neighbor 2001:FFCC:1000:1415::14 remote-as 1001 activate
- no neighbor 2001:FFCC:1000:1415::14 update-source LL activate
- no neighbor 2001:FFCC:1000:1415::14 next-hop-self activate
-
+ neighbor 100.0.1.14 activate
+ no neighbor FC00::14 activate
+ 
 address-family ipv6
- neighbor 2001:FFCC:1000:1415::14 remote-as 1001 activate
- neighbor 2001:FFCC:1000:1415::14 update-source LL activate
- neighbor 2001:FFCC:1000:1415::14 next-hop-self activate
+ no neighbor 100.0.1.14 activate
+ neighbor FC00::14 activate
 
-ip route 7.7.7.0 255.255.255.224 10.1.12.14
+# Анонсируем loopback1001-интерфейс в OSPF и запретим его анонс через внешний интерфейс
+# Политика по-умолчанию passive-interface default
 
+router ospf 1
+ network 10.0.1.15 0.0.0.0 area 0
+ 
 ```
 </details>
 
-### Балансировка
+#### 4. В офисе С.-Петербург настроить iBGP. (Не использовать протокол OSPF)
 
-Балансировка исходящего трафика, для большинства провайдеров, не столь критична, поэтому темой статьи является управление именно входящим трафиком. Нам нужно разложить наш трафик по двум каналам:
+Настроим маршрутизаторы R16, R17, R18, R32:
+- Создадим loopback-интерфейсы для iBGP;
+- Настроим iBGP;
+- Анонсируем интерфейсы по iBGP.
+
+Номер Loopback-интерфейсов равен номеру AS.
+Для удобства настройки iBGP применим __peer-group__
+
+<details>
+ <summary>Настройки iBGP между R14-R15</summary>
+
+ ``` bash
+#################
+# Настройки R18 #
+#################
+
+conf t
+
+interface Loopback2042
+ ip address 100.0.2.18 255.255.255.255
+ ipv6 enable
+ ipv6 address FC00::18/128
+ ipv6 address FE80::18 link-local
+
+router bgp 2042
+ neighbor AS2042 peer-group
+ neighbor AS2042 remote-as 2042
+ neighbor AS2042 update-source Loopback2042
+ 
+ neighbor 100.0.2.17 peer-group AS2042 
+ neighbor 100.0.2.16 peer-group AS2042
+ neighbor 100.0.2.32 peer-group AS2042
+ neighbor FC00::17 peer-group AS2042 
+ neighbor FC00::16 peer-group AS2042
+ neighbor FC00::32 peer-group AS2042
+ 
+address-family ipv4
+ neighbor 100.0.2.17 activate 
+ neighbor 100.0.2.16 activate
+ neighbor 100.0.2.32 activate
+ no neighbor FC00::17 activate 
+ no neighbor FC00::16 activate
+ no neighbor FC00::32 activate
+ 
+address-family ipv6
+ no neighbor 100.0.2.17 activate 
+ no neighbor 100.0.2.16 activate
+ no neighbor 100.0.2.32 activate
+ neighbor FC00::17 activate 
+ neighbor FC00::16 activate
+ neighbor FC00::32 activate
+
+
+#################
+# Настройки R17 #
+#################
+
+conf t
+
+interface Loopback2042
+ ip address 100.0.2.17 255.255.255.255
+ ipv6 enable
+ ipv6 address FC00::17/128
+ ipv6 address FE80::17 link-local
+
+router bgp 2042
+ neighbor AS2042 peer-group
+ neighbor AS2042 remote-as 2042
+ neighbor AS2042 update-source Loopback2042
+ 
+ neighbor 100.0.2.18 peer-group AS2042 
+ neighbor 100.0.2.16 peer-group AS2042
+ neighbor 100.0.2.32 peer-group AS2042
+ neighbor FC00::18 peer-group AS2042 
+ neighbor FC00::16 peer-group AS2042
+ neighbor FC00::32 peer-group AS2042
+ 
+address-family ipv4
+ neighbor 100.0.2.18 activate 
+ neighbor 100.0.2.16 activate
+ neighbor 100.0.2.32 activate
+ no neighbor FC00::18 activate 
+ no neighbor FC00::16 activate
+ no neighbor FC00::32 activate
+ 
+address-family ipv6
+ no neighbor 100.0.2.18 activate 
+ no neighbor 100.0.2.16 activate
+ no neighbor 100.0.2.32 activate
+ neighbor FC00::18 activate 
+ neighbor FC00::16 activate
+ neighbor FC00::32 activate
+ 
+#################
+# Настройки R16 #
+#################
+
+conf t
+
+interface Loopback2042
+ ip address 100.0.2.16 255.255.255.255
+ ipv6 enable
+ ipv6 address FC00::16/128
+ ipv6 address FE80::16 link-local
+
+router bgp 2042
+ neighbor AS2042 peer-group
+ neighbor AS2042 remote-as 2042
+ neighbor AS2042 update-source Loopback2042
+ 
+ neighbor 100.0.2.18 peer-group AS2042 
+ neighbor 100.0.2.17 peer-group AS2042
+ neighbor 100.0.2.32 peer-group AS2042
+ neighbor FC00::18 peer-group AS2042 
+ neighbor FC00::17 peer-group AS2042
+ neighbor FC00::32 peer-group AS2042
+ 
+address-family ipv4
+ neighbor 100.0.2.18 activate 
+ neighbor 100.0.2.17 activate
+ neighbor 100.0.2.32 activate
+ no neighbor FC00::18 activate 
+ no neighbor FC00::17 activate
+ no neighbor FC00::32 activate
+ 
+address-family ipv6
+ no neighbor 100.0.2.18 activate 
+ no neighbor 100.0.2.17 activate
+ no neighbor 100.0.2.32 activate
+ neighbor FC00::18 activate 
+ neighbor FC00::17 activate
+ neighbor FC00::32 activate
+
+#################
+# Настройки R32 #
+#################
+
+conf t
+
+interface Loopback2042
+ ip address 100.0.2.32 255.255.255.255
+ ipv6 enable
+ ipv6 address FC00::32/128
+ ipv6 address FE80::32 link-local
+
+router bgp 2042
+ neighbor AS2042 peer-group
+ neighbor AS2042 remote-as 2042
+ neighbor AS2042 update-source Loopback2042
+ 
+ neighbor 100.0.2.18 peer-group AS2042 
+ neighbor 100.0.2.17 peer-group AS2042
+ neighbor 100.0.2.16 peer-group AS2042
+ neighbor FC00::18 peer-group AS2042 
+ neighbor FC00::17 peer-group AS2042
+ neighbor FC00::16 peer-group AS2042
+ 
+address-family ipv4
+ neighbor 100.0.2.18 activate 
+ neighbor 100.0.2.17 activate
+ neighbor 100.0.2.16 activate
+ no neighbor FC00::18 activate 
+ no neighbor FC00::17 activate
+ no neighbor FC00::16 activate
+ 
+address-family ipv6
+ no neighbor 100.0.2.18 activate 
+ no neighbor 100.0.2.17 activate
+ no neighbor 100.0.2.16 activate
+ neighbor FC00::18 activate 
+ neighbor FC00::17 activate
+ neighbor FC00::16 activate
+
+
+
+ ```
+</details>
+
+
+
