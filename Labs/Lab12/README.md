@@ -116,6 +116,7 @@ router ospf 1
 
 Настроим маршрутизаторы R16, R17, R18, R32:
 - Создадим loopback-интерфейсы для iBGP;
+- Настроим EIGRP и анонсируем loopback-интерфейсы;
 - Настроим iBGP;
 - Анонсируем интерфейсы по iBGP.
 
@@ -123,20 +124,147 @@ router ospf 1
 Для удобства настройки iBGP применим __peer-group__
 
 <details>
- <summary>Настройки iBGP между R14-R15</summary>
+ <summary>Настройка EIGRP и анонсирование Lo-интерфейсов</summary>
 
- ``` bash
-#################
-# Настройки R18 #
-#################
+``` bash
+#############
+# EIGRP R17 #
+#############
 
 conf t
+interface Loopback2042
+ ip address 100.0.2.17 255.255.255.255
+ ipv6 enable
+ ipv6 address FC00::17/128
+ ipv6 address FE80::17 link-local
+ ipv6 eigrp 1
+end
+ 
+conf t
+ipv6 unicast-routing
+ipv6 router eigrp 1
+ eigrp router-id 0.0.2.17
+ passive-interface default
+ no passive-interface e0/1
+ no shutdown
+end
+ 
+conf t
+router eigrp 1
+ eigrp router-id 0.0.2.17
+ network 100.0.2.17 0.0.0.0
+   
+ passive-interface default
+ no passive-interface e0/1
 
+end
+
+#############
+# EIGRP R18 #
+#############
+
+conf t
 interface Loopback2042
  ip address 100.0.2.18 255.255.255.255
  ipv6 enable
  ipv6 address FC00::18/128
  ipv6 address FE80::18 link-local
+ ipv6 eigrp 1
+end
+
+conf t
+ipv6 unicast-routing
+ipv6 router eigrp 1
+ eigrp router-id 0.0.2.18
+ passive-interface default
+ no passive-interface e0/1
+ no passive-interface e0/0
+ no shutdown
+end
+conf t
+router eigrp 1
+ eigrp router-id 0.0.2.18
+ network 100.0.2.18 0.0.0.0
+  
+ passive-interface default
+ no passive-interface e0/1
+ no passive-interface e0/0
+ 
+ ipv6 eigrp 1
+ 
+#############
+# EIGRP R16 #
+#############
+
+conf t
+interface Loopback2042
+ ip address 100.0.2.16 255.255.255.255
+ ipv6 enable
+ ipv6 address FC00::16/128
+ ipv6 address FE80::16 link-local
+ ipv6 eigrp 1
+end
+ 
+conf t
+ipv6 unicast-routing
+ipv6 router eigrp 1
+ eigrp router-id 0.0.2.16
+ passive-interface default
+ no passive-interface e0/1
+ no shutdown
+
+conf t
+router eigrp 1
+ eigrp router-id 0.0.2.16
+ network 100.0.2.16 0.0.0.0
+  
+ passive-interface default
+ no passive-interface e0/1
+
+ ipv6 eigrp 1
+ 
+#############
+# EIGRP R32 #
+#############
+
+conf t
+interface Loopback2042
+ ip address 100.0.2.32 255.255.255.255
+ ipv6 enable
+ ipv6 address FC00::32/128
+ ipv6 address FE80::32 link-local
+ ipv6 eigrp 1
+end
+
+conf t
+ipv6 unicast-routing
+ipv6 router eigrp 1
+ eigrp router-id 0.0.2.32
+ passive-interface default
+ no passive-interface e0/0
+ no shutdown
+
+conf t
+router eigrp 1
+ eigrp router-id 0.0.2.32
+ network 100.0.2.32 0.0.0.0
+  
+ passive-interface default
+ no passive-interface e0/0
+
+```
+</details>
+
+
+<details>
+ <summary>Настройки iBGP между R16, R17, R18, R32</summary>
+
+ ``` bash
+############
+# iBGP R18 #
+############
+
+conf t
 
 router bgp 2042
  neighbor AS2042 peer-group
@@ -167,17 +295,11 @@ address-family ipv6
  neighbor FC00::32 activate
 
 
-#################
-# Настройки R17 #
-#################
+############
+# iBGP R17 #
+############
 
 conf t
-
-interface Loopback2042
- ip address 100.0.2.17 255.255.255.255
- ipv6 enable
- ipv6 address FC00::17/128
- ipv6 address FE80::17 link-local
 
 router bgp 2042
  neighbor AS2042 peer-group
@@ -207,17 +329,11 @@ address-family ipv6
  neighbor FC00::16 activate
  neighbor FC00::32 activate
  
-#################
-# Настройки R16 #
-#################
+############
+# iBGP R16 #
+############
 
 conf t
-
-interface Loopback2042
- ip address 100.0.2.16 255.255.255.255
- ipv6 enable
- ipv6 address FC00::16/128
- ipv6 address FE80::16 link-local
 
 router bgp 2042
  neighbor AS2042 peer-group
@@ -247,17 +363,11 @@ address-family ipv6
  neighbor FC00::17 activate
  neighbor FC00::32 activate
 
-#################
-# Настройки R32 #
-#################
+############
+# iBGP R32 #
+############
 
 conf t
-
-interface Loopback2042
- ip address 100.0.2.32 255.255.255.255
- ipv6 enable
- ipv6 address FC00::32/128
- ipv6 address FE80::32 link-local
 
 router bgp 2042
  neighbor AS2042 peer-group
@@ -286,7 +396,6 @@ address-family ipv6
  neighbor FC00::18 activate 
  neighbor FC00::17 activate
  neighbor FC00::16 activate
-
 
 
  ```
