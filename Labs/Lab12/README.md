@@ -328,7 +328,7 @@ end
 </details>
 
 <details>
- <summary>Проверка работоспособности EIGRP ipv4/ipv6</summary>
+ <summary>Проверка работоспособности EIGRP ipv4/ipv6 в офисе СПб</summary>
 
 __Доступность Lo-интерфейсов между собой__
 
@@ -550,7 +550,7 @@ address-family ipv6
 
 
 <details>
- <summary>Проверка работоспособности EIGRP ipv4/ipv6</summary>
+ <summary>Проверка работоспособности iBGP ipv4/ipv6 в офисе СПб</summary>
 
 Таблица маршрутов iBGP ipv4 [R17]
 
