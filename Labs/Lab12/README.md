@@ -116,12 +116,18 @@ router ospf 1
 ```
 </details>
 
-Проверка установки BGP-сессии между роутерами.
+<details>
+ <summary>Проверка установки BGP-сессии между роутерами</summary>
+
+__ipv4__
 
 ![iBGP_ipv4_R14-R15](iBGP_ipv4_R14-R15.png)
 
+__ipv6__
+
 ![iBGP_ipv6_R14-R15](iBGP_ipv6_R14-R15.png)
 
+</details>
 
 #### 2. Настроите iBGP в провайдере Триада
 
@@ -140,7 +146,7 @@ router ospf 1
 #################
 
 conf t
-interface Loopback1001
+interface Loopback520
  ip address 100.0.5.23 255.255.255.255
  ipv6 address FE80::23 link-local
  ipv6 address FC00::23/128
@@ -154,7 +160,7 @@ interface Loopback1001
 #################
 
 conf t
-interface Loopback1001
+interface Loopback520
  ip address 100.0.5.24 255.255.255.255
  ipv6 address FE80::24 link-local
  ipv6 address FC00::24/128
@@ -167,7 +173,7 @@ interface Loopback1001
 #################
 
 conf t
-interface Loopback1001
+interface Loopback520
  ip address 100.0.5.25 255.255.255.255
  ipv6 address FE80::25 link-local
  ipv6 address FC00::25/128
@@ -180,7 +186,7 @@ interface Loopback1001
 #################
 
 conf t
-interface Loopback1001
+interface Loopback520
  ip address 100.0.5.26 255.255.255.255
  ipv6 address FE80::26 link-local
  ipv6 address FC00::26/128
@@ -209,7 +215,7 @@ ipv6 router eigrp 1
  no passive-interface e0/2
  no shutdown
 
-int range e0/1-2
+int range e0/0-3
  ipv6 eigrp 1
 
 router eigrp 1
@@ -234,7 +240,7 @@ ipv6 router eigrp 1
  no passive-interface e0/2
  no shutdown
 
-int range e0/1-2
+int range e0/0-3
  ipv6 eigrp 1
 
 router eigrp 1
@@ -259,9 +265,7 @@ ipv6 router eigrp 1
  no passive-interface e0/2
  no shutdown
 
-int e0/0
- ipv6 eigrp 1
-int e0/2
+int range e0/0-3
  ipv6 eigrp 1
 
 router eigrp 1
@@ -286,9 +290,7 @@ ipv6 router eigrp 1
  no passive-interface e0/2
  no shutdown
 
-int e0/0
- ipv6 eigrp 1
-int e0/2
+int range e0/0-3
  ipv6 eigrp 1
 
 router eigrp 1
@@ -302,6 +304,19 @@ router eigrp 1
 
 
 ```
+
+</details>
+
+<details>
+ <summary>Проверка доступности Loopback через EIGRP</summary>
+
+__ipv4__
+
+![ping_Lo_Triada_ipv4](ping_Lo_Triada_ipv4.png)
+
+__ipv6__
+
+![ping_Lo_Triada_ipv6](ping_Lo_Triada_ipv6.png)
 
 </details>
 
@@ -463,6 +478,19 @@ address-family ipv6
 ```
 
 </details> 
+
+<details>
+ <summary>Проверка работы iBGP</summary>
+
+Проверка работы route-reflector и наличия соседства между роутерами по __ipv4__
+
+![iBGP_R23_RR_ipv4](iBGP_R23_RR_ipv4.png)
+
+Проверка работы route-reflector и наличия соседства между роутерами по __ipv4__
+
+![iBGP_R23_RR_ipv6](iBGP_R23_RR_ipv6.png)
+
+</details>
 
 #### 4. В офисе С.-Петербург настроить iBGP. (Не использовать протокол OSPF)
 
