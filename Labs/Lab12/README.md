@@ -125,8 +125,344 @@ router ospf 1
 
 #### 2. Настроите iBGP в провайдере Триада
 
+Настроим маршрутизаторы R23-R26. Создадим интерфейсы _loopback520_, анонсируем их по EIGRP, далее настроим iBGP.
+При настройке iBGP применим шаблоны __peer-group__ и технологию __router-reflector__. Назначим функции RR двум роутерам, R23 и R26. Объединим оба RR в общий кластер.
+
+Адреса __loopback__ назначаются согласно правила 100.0.5.__[номер_маршрутизатора]__\
+Значение __router-id__ формируется согласно 0.0.5.__[номер_маршрутизатора]__
+
+<details>
+ <summary>Настройки Loopback</summary>
+
+``` bash
+#################
+# Настройки R23 #
+#################
+
+conf t
+interface Loopback1001
+ ip address 100.0.5.23 255.255.255.255
+ ipv6 address FE80::23 link-local
+ ipv6 address FC00::23/128
+ ipv6 enable
+ ipv6 eigrp 1
+ no shutdown
+ 
+
+#################
+# Настройки R24 #
+#################
+
+conf t
+interface Loopback1001
+ ip address 100.0.5.24 255.255.255.255
+ ipv6 address FE80::24 link-local
+ ipv6 address FC00::24/128
+ ipv6 enable
+ ipv6 eigrp 1
+ no shutdown
+
+#################
+# Настройки R25 #
+#################
+
+conf t
+interface Loopback1001
+ ip address 100.0.5.25 255.255.255.255
+ ipv6 address FE80::25 link-local
+ ipv6 address FC00::25/128
+ ipv6 enable
+ ipv6 eigrp 1
+ no shutdown
+ 
+#################
+# Настройки R26 #
+#################
+
+conf t
+interface Loopback1001
+ ip address 100.0.5.26 255.255.255.255
+ ipv6 address FE80::26 link-local
+ ipv6 address FC00::26/128
+ ipv6 enable
+ ipv6 eigrp 1
+ no shutdown
+
+```
+
+</details>
+
+<details>
+ <summary>Настройки EIGRP</summary>
+
+``` bash
+#############
+# EIGRP 23  #
+#############
+
+conf t
+ipv6 unicast-routing
+ipv6 router eigrp 1
+ eigrp router-id 0.0.5.23
+ passive-interface default
+ no passive-interface e0/1
+ no passive-interface e0/2
+ no shutdown
+
+int range e0/1-2
+ ipv6 eigrp 1
+
+router eigrp 1
+ eigrp router-id 0.0.5.23
+ network 100.0.5.23 0.0.0.0
+ network 83.239.45.48 0.0.0.15
+ network 83.239.45.0 0.0.0.15
+ passive-interface default
+ no passive-interface e0/1
+ no passive-interface e0/2
+
+#############
+# EIGRP 24  #
+#############
+
+conf t
+ipv6 unicast-routing
+ipv6 router eigrp 1
+ eigrp router-id 0.0.5.24
+ passive-interface default
+ no passive-interface e0/1
+ no passive-interface e0/2
+ no shutdown
+
+int range e0/1-2
+ ipv6 eigrp 1
+
+router eigrp 1
+ eigrp router-id 0.0.5.24
+ network 100.0.5.24 0.0.0.0
+ network 83.239.45.48 0.0.0.15
+ network 83.239.45.32 0.0.0.15
+ passive-interface default
+ no passive-interface e0/1
+ no passive-interface e0/2
+
+#############
+# EIGRP 25  #
+#############
+
+conf t
+ipv6 unicast-routing
+ipv6 router eigrp 1
+ eigrp router-id 0.0.5.25
+ passive-interface default
+ no passive-interface e0/0
+ no passive-interface e0/2
+ no shutdown
+
+int e0/0
+ ipv6 eigrp 1
+int e0/2
+ ipv6 eigrp 1
+
+router eigrp 1
+ eigrp router-id 0.0.5.25
+ network 100.0.5.25 0.0.0.0
+ network 83.239.45.0 0.0.0.15
+ network 83.239.45.16 0.0.0.15
+ passive-interface default
+ no passive-interface e0/0
+ no passive-interface e0/2
+
+#############
+# EIGRP 26  #
+#############
+
+conf t
+ipv6 unicast-routing
+ipv6 router eigrp 1
+ eigrp router-id 0.0.5.26
+ passive-interface default
+ no passive-interface e0/0
+ no passive-interface e0/2
+ no shutdown
+
+int e0/0
+ ipv6 eigrp 1
+int e0/2
+ ipv6 eigrp 1
+
+router eigrp 1
+ eigrp router-id 0.0.5.26
+ network 100.0.5.26 0.0.0.0
+ network 83.239.45.32 0.0.0.15
+ network 83.239.45.16 0.0.0.15
+ passive-interface default
+ no passive-interface e0/0
+ no passive-interface e0/2
 
 
+```
+
+</details>
+
+<details>
+ <summary>Настройки iBGP</summary>
+
+``` bash
+##################
+# iBGP 23 + RR   #
+##################
+
+conf t
+router bgp 520
+ neighbor AS520 peer-group
+ neighbor AS520 remote-as 520
+ neighbor AS520 update-source Loopback520
+ neighbor AS520 next-hop-self
+ neighbor AS520 route-reflector-client
+ bgp cluster-id 1
+ 
+ neighbor AS520-6 peer-group
+ neighbor AS520-6 remote-as 520
+ neighbor AS520-6 update-source Loopback520
+ neighbor AS520-6 next-hop-self
+ neighbor AS520-6 router-reflector
+ 
+ neighbor 100.0.5.24 peer-group AS520 
+ neighbor 100.0.5.25 peer-group AS520
+ neighbor 100.0.5.26 peer-group AS520
+ neighbor FC00::24 peer-group AS520-6 
+ neighbor FC00::25 peer-group AS520-6
+ neighbor FC00::26 peer-group AS520-6
+ 
+address-family ipv4
+ neighbor 100.0.5.24 activate 
+ neighbor 100.0.5.25 activate
+ neighbor 100.0.5.26 activate
+ no neighbor FC00::24 activate 
+ no neighbor FC00::25 activate
+ no neighbor FC00::26 activate
+ 
+address-family ipv6
+ no neighbor 100.0.5.24 activate 
+ no neighbor 100.0.5.25 activate
+ no neighbor 100.0.5.26 activate
+ neighbor FC00::24 activate 
+ neighbor FC00::25 activate
+ neighbor FC00::26 activate
+
+#################
+# iBGP 26 + RR  #
+#################
+
+conf t
+router bgp 520
+ neighbor AS520 peer-group
+ neighbor AS520 remote-as 520
+ neighbor AS520 update-source Loopback520
+ neighbor AS520 next-hop-self
+ neighbor AS520 route-reflector-client
+ bgp cluster-id 1
+ 
+ neighbor AS520-6 peer-group
+ neighbor AS520-6 remote-as 520
+ neighbor AS520-6 update-source Loopback520
+ neighbor AS520-6 next-hop-self
+ neighbor AS520-6 router-reflector
+ 
+ neighbor 100.0.5.23 peer-group AS520 
+ neighbor 100.0.5.24 peer-group AS520
+ neighbor 100.0.5.25 peer-group AS520
+ neighbor FC00::23 peer-group AS520-6 
+ neighbor FC00::24 peer-group AS520-6
+ neighbor FC00::25 peer-group AS520-6
+ 
+address-family ipv4
+ neighbor 100.0.5.23 activate 
+ neighbor 100.0.5.24 activate
+ neighbor 100.0.5.25 activate
+ no neighbor FC00::23 activate 
+ no neighbor FC00::24 activate
+ no neighbor FC00::25 activate
+ 
+address-family ipv6
+ no neighbor 100.0.5.23 activate 
+ no neighbor 100.0.5.24 activate
+ no neighbor 100.0.5.25 activate
+ neighbor FC00::23 activate 
+ neighbor FC00::24 activate
+ neighbor FC00::25 activate
+
+#############
+# iBGP 24   #
+#############
+
+conf t
+router bgp 520
+ neighbor AS520 peer-group
+ neighbor AS520 remote-as 520
+ neighbor AS520 update-source Loopback520
+ neighbor AS520 next-hop-self
+  
+ neighbor AS520-6 peer-group
+ neighbor AS520-6 remote-as 520
+ neighbor AS520-6 update-source Loopback520
+ neighbor AS520-6 next-hop-self
+ 
+ neighbor 100.0.5.23 peer-group AS520 
+ neighbor 100.0.5.26 peer-group AS520
+ neighbor FC00::23 peer-group AS520-6 
+ neighbor FC00::26 peer-group AS520-6
+  
+address-family ipv4
+ neighbor 100.0.5.23 activate 
+ neighbor 100.0.5.26 activate
+ no neighbor FC00::23 activate 
+ no neighbor FC00::26 activate
+  
+address-family ipv6
+ no neighbor 100.0.5.23 activate 
+ no neighbor 100.0.5.26 activate
+ neighbor FC00::23 activate 
+ neighbor FC00::26 activate
+
+#############
+# iBGP 25   #
+#############
+
+conf t
+router bgp 520
+ neighbor AS520 peer-group
+ neighbor AS520 remote-as 520
+ neighbor AS520 update-source Loopback520
+ neighbor AS520 next-hop-self
+  
+ neighbor AS520-6 peer-group
+ neighbor AS520-6 remote-as 520
+ neighbor AS520-6 update-source Loopback520
+ neighbor AS520-6 next-hop-self
+ 
+ neighbor 100.0.5.23 peer-group AS520 
+ neighbor 100.0.5.26 peer-group AS520
+ neighbor FC00::23 peer-group AS520-6 
+ neighbor FC00::26 peer-group AS520-6
+  
+address-family ipv4
+ neighbor 100.0.5.23 activate 
+ neighbor 100.0.5.26 activate
+ no neighbor FC00::23 activate 
+ no neighbor FC00::26 activate
+  
+address-family ipv6
+ no neighbor 100.0.5.23 activate 
+ no neighbor 100.0.5.26 activate
+ neighbor FC00::23 activate 
+ neighbor FC00::26 activate
+
+
+```
+
+</details> 
 
 #### 4. В офисе С.-Петербург настроить iBGP. (Не использовать протокол OSPF)
 
@@ -154,9 +490,10 @@ ipv6 router eigrp 1
  passive-interface default
  no passive-interface e0/1
  no shutdown
-end
 
-conf t
+int range e0/0-2
+ ipv6 eigrp 1
+
 interface Loopback2042
  ip address 100.0.2.17 255.255.255.255
  ipv6 enable
@@ -165,29 +502,12 @@ interface Loopback2042
  ipv6 eigrp 1
 end
  
-conf t
-ipv6 unicast-routing
-ipv6 router eigrp 1
- eigrp router-id 0.0.2.17
- passive-interface default
- no passive-interface e0/1
- no shutdown
-end
- 
-conf t
 router eigrp 1
  eigrp router-id 0.0.2.17
  network 100.0.2.17 0.0.0.0
-   
  passive-interface default
  no passive-interface e0/1
 
-end
-
-conf t
- int range e0/0-2
- ipv6 eigrp 1
-end
 
 #############
 # EIGRP R18 #
@@ -203,38 +523,24 @@ ipv6 router eigrp 1
  no shutdown
 end
 
-conf t
+int range e0/0-3
+ ipv6 eigrp 1
+
 interface Loopback2042
  ip address 100.0.2.18 255.255.255.255
  ipv6 enable
  ipv6 address FC00::18/128
  ipv6 address FE80::18 link-local
  ipv6 eigrp 1
-end
 
-conf t
-ipv6 unicast-routing
-ipv6 router eigrp 1
- eigrp router-id 0.0.2.18
- passive-interface default
- no passive-interface e0/1
- no passive-interface e0/0
- no shutdown
-end
-conf t
 router eigrp 1
  eigrp router-id 0.0.2.18
  network 100.0.2.18 0.0.0.0
-  
  passive-interface default
  no passive-interface e0/1
  no passive-interface e0/0
 end
 
-conf t
- int range e0/0-3
- ipv6 eigrp 1
-end
  
 #############
 # EIGRP R16 #
@@ -247,40 +553,25 @@ ipv6 router eigrp 1
  passive-interface default
  no passive-interface e0/1
  no shutdown
-end
 
-conf t
+int range e0/0-3
+ ipv6 eigrp 1
+
 interface Loopback2042
  ip address 100.0.2.16 255.255.255.255
  ipv6 enable
  ipv6 address FC00::16/128
  ipv6 address FE80::16 link-local
  ipv6 eigrp 1
-end
  
-conf t
-ipv6 unicast-routing
-ipv6 router eigrp 1
- eigrp router-id 0.0.2.16
- passive-interface default
- no passive-interface e0/1
- no passive-interface e0/3
- no shutdown
-
-conf t
 router eigrp 1
  eigrp router-id 0.0.2.16
  network 100.0.2.16 0.0.0.0
-  
  passive-interface default
  no passive-interface e0/1
  no passive-interface e0/3
 end
 
-conf t
- int range e0/0-3
- ipv6 eigrp 1
-end
  
 #############
 # EIGRP R32 #
@@ -294,37 +585,24 @@ ipv6 router eigrp 1
  no passive-interface e0/0
  no shutdown
 
-conf t
+int range e0/0
+ ipv6 eigrp 1 
+ 
 interface Loopback2042
  ip address 100.0.2.32 255.255.255.255
  ipv6 enable
  ipv6 address FC00::32/128
  ipv6 address FE80::32 link-local
  ipv6 eigrp 1
-end
 
-conf t
-ipv6 unicast-routing
-ipv6 router eigrp 1
- eigrp router-id 0.0.2.32
- passive-interface default
- no passive-interface e0/0
- no shutdown
-
-conf t
 router eigrp 1
  eigrp router-id 0.0.2.32
  network 100.0.2.32 0.0.0.0
-  
  passive-interface default
  no passive-interface e0/0
- end
- 
- conf t
- int range e0/0
- ipv6 eigrp 1
-end
 
+ 
+ ##!!!! НЕ ЗАБЫТЬ ДОБАВИТЬ "ipv6 eigrp 1" ВО ВСЕ ИНТЕРФЕЙСЫ!!!!
 ```
 </details>
 
