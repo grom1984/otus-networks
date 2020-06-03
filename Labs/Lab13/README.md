@@ -25,7 +25,7 @@
 
 ``` bash
 ##############################
-# AS1001 No traffic transit #
+# AS 1001 No traffic transit #
 ##############################
 
 #############
@@ -34,6 +34,7 @@
 
 conf t
 router bgp 1001
+ no auto-summary
  address-family ipv4
   neighbor 7.7.7.22 prefix-list NO_TRANSIT out
  exit-address-family
@@ -42,8 +43,10 @@ router bgp 1001
   neighbor 2001:FFCC:1000:1422::22 prefix-list NO_TRANSIT out
  exit-address-family
 !
-ip prefix-list LAN permit 7.7.7.0/27
-ip prefix-list LAN deny 0.0.0.0 ge 32
+ip prefix-list NO_TRANSIT permit 7.7.7.0/27
+ip prefix-list NO_TRANSIT deny 0.0.0.0/0 ge 32
+ipv6 prefix-list NO_TRANSIT permit 2001:FFCC:1000:1422::/64
+ipv6 prefix-list NO_TRANSIT deny ::/0 ge 128
 
 #############
 #  R15      #
@@ -51,6 +54,7 @@ ip prefix-list LAN deny 0.0.0.0 ge 32
 
 conf t
 router bgp 1001
+ no auto-summary
  address-family ipv4
   neighbor 2.2.2.15 prefix-list NO_TRANSIT out
  exit-address-family
@@ -59,9 +63,10 @@ router bgp 1001
   neighbor 2001:FFCC:1000:1521::21 prefix-list NO_TRANSIT out
  exit-address-family
 !
-ip prefix-list LAN permit 2.2.2.0/27
-ip prefix-list LAN deny 0.0.0.0 ge 32
-
+ip prefix-list NO_TRANSIT permit 2.2.2.0/27
+ip prefix-list NO_TRANSIT deny 0.0.0.0/0 ge 32
+ipv6 prefix-list NO_TRANSIT permit 2001:FFCC:1000:1521::/64
+ipv6 prefix-list NO_TRANSIT deny ::/0 ge 128
 
 ```
 
@@ -87,7 +92,7 @@ ip prefix-list LAN deny 0.0.0.0 ge 32
 
 conf t
 router bgp 2042
- 
+ no auto-summary
  !
  address-family ipv4
   neighbor 82.208.114.26 filter-list 100 out
@@ -133,12 +138,12 @@ router bgp 101
  !
  address-family ipv6
   neighbor 2001:FFCC:1000:1422::14 default-originate
-  neighbor 2001:FFCC:1000:1422::14 prefix-list DEF_ROUTEv6
+  neighbor 2001:FFCC:1000:1422::14 prefix-list DEF_ROUTEv6 out
  ! 
  exit-address-family
 !
 ip prefix-list DEF_ROUTEv4 seq 5 permit 0.0.0.0/0
-ip prefix-list DEF_ROUTEv6 seq 5 permit ::/0
+ipv6 prefix-list DEF_ROUTEv6 seq 5 permit ::/0
 
 #############
 #  R21      #
@@ -158,8 +163,7 @@ router bgp 301
  exit-address-family
 !
 ip prefix-list DEF_ROUTEv4 seq 5 permit 0.0.0.0/0
-ip prefix-list DEF_ROUTEv6 seq 5 permit ::/0
-
+ipv6 prefix-list DEF_ROUTEv6 seq 5 permit ::/0
 
 ```
 
@@ -194,7 +198,7 @@ router bgp 520
  exit-address-family
 !
 ip prefix-list DEF_ROUTEv4 seq 5 permit 0.0.0.0/0
-ip prefix-list DEF_ROUTEv6 seq 5 permit ::/0
+ipv6 prefix-list DEF_ROUTEv6 seq 5 permit ::/0
 
 #############
 #  R26      #
@@ -214,8 +218,7 @@ router bgp 520
  exit-address-family
 !
 ip prefix-list DEF_ROUTEv4 seq 5 permit 0.0.0.0/0
-ip prefix-list DEF_ROUTEv6 seq 5 permit ::/0
-
+ipv6 prefix-list DEF_ROUTEv6 seq 5 permit ::/0
 
 ```
 
