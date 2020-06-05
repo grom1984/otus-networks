@@ -114,10 +114,10 @@ ip as-path access-list 100 deny .*
 
 #### 3. Настроить провайдера Киторн так, чтобы в офис Москва отдавался только маршрут по-умолчанию
 
-Произведём настройки на R21 и R22, указав BGP отправлять только маршрут по-умолчанию в направлении соседей R14 и R15 соответственно.
+Настроим роутер R22, указав BGP отправлять только маршрут по-умолчанию в направлении соседа R14.
 
 <details>
- <summary>Настройки R21 и R22</summary>
+ <summary>Настройки R22</summary>
 
 ``` bash
 ##############################
@@ -145,6 +145,24 @@ router bgp 101
 ip prefix-list DEF_ROUTEv4 seq 5 permit 0.0.0.0/0
 ipv6 prefix-list DEF_ROUTEv6 seq 5 permit ::/0
 
+```
+
+</details>
+
+
+#### 4. Настроить провайдера Ламас так, чтобы в офис Москва отдавался только маршрут по-умолчанию и префикс офиса С.-Петербург
+
+Произведём настройки маршрутизатора R22, указав BGP отправлять маршрут по-умолчанию и префикс сети СПб в направлении соседа R15.
+
+<details>
+ <summary>Настройки R21</summary>
+
+``` bash
+
+###########################################
+# Only default-route to MSK + Prefix SPb  #
+###########################################
+
 #############
 #  R21      #
 #############
@@ -162,63 +180,13 @@ router bgp 301
   neighbor 2001:FFCC:1000:1521::15 prefix-list DEF_ROUTEv6 out
  exit-address-family
 !
-ip prefix-list DEF_ROUTEv4 seq 5 permit 0.0.0.0/0
-ipv6 prefix-list DEF_ROUTEv6 seq 5 permit ::/0
+ip prefix-list DEF_ROUTEv4 seq 5 permit 87.250.250.0/27
+ip prefix-list DEF_ROUTEv4 seq 10 permit 82.208.114.0/27
+ip prefix-list DEF_ROUTEv4 seq 15 permit 0.0.0.0/0
+ipv6 prefix-list DEF_ROUTEv6 seq 5 permit 2001:FFCC:2000:1824::/64
+ipv6 prefix-list DEF_ROUTEv6 seq 10 permit 2001:FFCC:2000:1826::/64
+ipv6 prefix-list DEF_ROUTEv6 seq 15 permit ::/0
 
-```
-
-</details>
-
-
-#### 4. Настроить провайдера Ламас так, чтобы в офис Москва отдавался только маршрут по-умолчанию и префикс офиса С.-Петербург
-
-<details>
- <summary>Настройки R24 и R26</summary>
-
-``` bash
-##############################
-# Only default-route to SPb  #
-##############################
-
-#############
-#  R24      #
-#############
-
-router bgp 520
- no auto-summary
- !
- address-family ipv4
-  neighbor 87.250.250.18 default-originate
-  neighbor 87.250.250.18 prefix-list DEF_ROUTEv4 out
- exit-address-family
- !
- address-family ipv6
-  neighbor 2001:FFCC:2000:1824::18 default-originate
-  neighbor 2001:FFCC:2000:1824::18 prefix-list DEF_ROUTEv6 out
- exit-address-family
-!
-ip prefix-list DEF_ROUTEv4 seq 5 permit 0.0.0.0/0
-ipv6 prefix-list DEF_ROUTEv6 seq 5 permit ::/0
-
-#############
-#  R26      #
-#############
-
-router bgp 520
- no auto-summary
- !
- address-family ipv4
-  neighbor 82.208.114.18 default-originate
-  neighbor 82.208.114.18 prefix-list DEF_ROUTEv4 out
- exit-address-family
- !
- address-family ipv6
-  neighbor 2001:FFCC:2000:1826::18 default-originate
-  neighbor 2001:FFCC:2000:1826::18 prefix-list DEF_ROUTEv6 out
- exit-address-family
-!
-ip prefix-list DEF_ROUTEv4 seq 5 permit 0.0.0.0/0
-ipv6 prefix-list DEF_ROUTEv6 seq 5 permit ::/0
 
 ```
 
