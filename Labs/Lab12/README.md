@@ -1007,13 +1007,14 @@ B   2001:FFCC:8000:2526::/64 [200/0]
  <summary>Настройка R18</summary>
 
 ``` bash
-##################
-# AS_PREPEND R14 #
-##################
+############################
+# Traffic balancing R18    #
+############################
 
 conf t
 
 router bgp 2042
+ bgp bestpath as-path multipath-relax
  maximum_paths 2
 
 ```
