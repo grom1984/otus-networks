@@ -11,6 +11,19 @@
 
 ### Решение:
 
+Добавим таблицу PI-адресов для офисов МСК и СПб.
+Для простоты понимания:\
+__IPv4__ - адреса на основе __код региона__.\
+__IPv6__ - 2001:FFCC:__[Nmbr_ASN]__:__[Code_Region]__
+##### Таблица PI-адресов
+
+| Network    | ASN  | Office          |
+|-------:|:----|:--------|
+| 77.77.77.0/25 | 1001 | Москва |
+| 2001:FFCC:1001:77::/64 | 1001 | Москва |
+| 178.178.178.0/25 | 2042 | Санкт-Петербург |
+| 2001:FFCC:2042:178::/64 | 2042 | Санкт-Петербург |
+
 
 ### Топология
 
@@ -152,7 +165,89 @@ ipv6 prefix-list DEF_ROUTEv6 seq 5 permit ::/0
 
 #### 4. Настроить провайдера Ламас так, чтобы в офис Москва отдавался только маршрут по-умолчанию и префикс офиса С.-Петербург
 
+Укажем подсеть с PI-адресами для ASN 2042 на пограничном роутере R18 в команде network. А также, укажем, что это подсеть находится на этом же роутере, добавив статический маршрут до неё через _null_.\
 Произведём настройки маршрутизатора R22, указав BGP отправлять маршрут по-умолчанию и префикс сети СПб в направлении соседа R15.
+
+<details>
+ <summary>Привязка PI-адресов к ASN 1001 (MSK)</summary>
+
+``` bash
+
+##################################
+#  ADD PI-address ASN 1001 (MSK) #
+##################################
+
+#############
+#  R14      #
+#############
+
+router bgp 1001
+ !
+ address-family ipv4
+  network 77.77.77.0 mask 255.255.255.128
+ exit-address-family
+ !
+ address-family ipv6
+  network 2001:FFCC:1001:77::/64
+ exit-address-family
+
+ip route 77.77.77.0 255.255.255.128 Null 0 name "PI IPv4 (ASN 1001)"
+ipv6 route 2001:FFCC:1001:77::/6 Null 0 name "PI IPv6 (ASN 1001)"
+
+#############
+#  R15      #
+#############
+
+router bgp 1001
+ !
+ address-family ipv4
+  network 77.77.77.0 mask 255.255.255.128
+ exit-address-family
+ !
+ address-family ipv6
+  network 2001:FFCC:1001:77::/64
+ exit-address-family
+
+ip route 77.77.77.0 255.255.255.128 Null 0 name "PI IPv4 (ASN 1001)"
+ipv6 route 2001:FFCC:1001:77::/6 Null 0 name "PI IPv6 (ASN 1001)"
+
+
+```
+
+</details>
+
+
+
+<details>
+ <summary>Привязка PI-адресов к ASN 2042 (SPb)</summary>
+
+``` bash
+##################################
+#  ADD PI-address ASN 2042 (SPb) #
+##################################
+
+#############
+#  R18      #
+#############
+
+router bgp 1001
+ !
+ address-family ipv4
+  network 178.178.178.0 mask 255.255.255.128
+ exit-address-family
+ !
+ address-family ipv6
+  network 2001:FFCC:2042:178::/64
+ exit-address-family
+
+ip route 178.178.178.0 255.255.255.128 Null 0 name "PI IPv4 (ASN 2042)"
+ipv6 route 2001:FFCC:2042:178::/64 Null 0 name "PI IPv6 (ASN 2042)"
+
+
+```
+
+</details>
+
 
 <details>
  <summary>Настройки R21</summary>
@@ -180,14 +275,26 @@ router bgp 301
   neighbor 2001:FFCC:1000:1521::15 prefix-list DEF_ROUTEv6 out
  exit-address-family
 !
-ip prefix-list DEF_ROUTEv4 seq 5 permit 87.250.250.0/27
-ip prefix-list DEF_ROUTEv4 seq 10 permit 82.208.114.0/27
-ip prefix-list DEF_ROUTEv4 seq 15 permit 0.0.0.0/0
-ipv6 prefix-list DEF_ROUTEv6 seq 5 permit 2001:FFCC:2000:1824::/64
-ipv6 prefix-list DEF_ROUTEv6 seq 10 permit 2001:FFCC:2000:1826::/64
-ipv6 prefix-list DEF_ROUTEv6 seq 15 permit ::/0
-
+ip prefix-list DEF_ROUTEv4 seq 5 permit 178.178.178.0/25
+ip prefix-list DEF_ROUTEv4 seq 10 permit 0.0.0.0/0
+ipv6 prefix-list DEF_ROUTEv6 seq 5 permit 2001:FFCC:2042:178::/64
+ipv6 prefix-list DEF_ROUTEv6 seq 10 permit ::/0
 
 ```
+
+</details>
+
+
+<details>
+ <summary>Проверка таблиц маршрутизации [IPv4/IPv6] BGP на R14-R15</summary>
+
+
+__R14__
+
+![Prefix_SPb_to_R14](Prefix_SPb_to_R14.png)
+
+__R15__
+
+![Prefix_SPb_to_R15](Prefix_SPb_to_R15.png)
 
 </details>
