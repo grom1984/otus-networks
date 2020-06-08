@@ -1015,11 +1015,13 @@ conf t
 
 router bgp 2042
  bgp bestpath as-path multipath-relax
- maximum_paths 2
+ address-family ipv4
+  maximum_paths 2
+ address-family ipv6
+  maximum_paths 2
 
 ```
 
 </details>
 
-Балансировку настроить не удалось, по причине отсутствия _maximum\_paths_ в eve-ng.
 
