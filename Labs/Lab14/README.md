@@ -1,4 +1,4 @@
-# Лабораторная работа №14. Основные протоколы сети интернет
+# Лабораторная работа №14. Основные протоколы сети Интернет
 
 ### Задание:
 
@@ -23,8 +23,6 @@
 | 178.178.178.0/25 | 2042 | Санкт-Петербург |
 | 2001:FFCC:2042:178::/64 | 2042 | Санкт-Петербург |
 
-##### Таблица NAT
-
 
 ### Топология
 
@@ -32,3 +30,104 @@
 
 #### 1. Настроить NAT(PAT) на R14 и R15. Трансляция должна осуществляться в адрес автономной системы AS1001
 
+Сделаем трансляцию адресов только для пользовательских подсетей. Пока их две - 10.0.2.0/24 и 10.0.3.0/24, в дальнейшем их кол-во может увеличиться, поэтому сразу укажем суммарный диапазон 10.0.0.0/16. Также, Для роутеров выход в Интернет не требуется, обновления будут устанавливаться из локальных источников (серверов).
+Для ASN 1001 выделены PI-адреса 77.77.77.0/25. Выделим по одному внешнему IP-адресу в качестве Global Inside каждому из пограничных маршрутизаторов R14 и R15. Создадим на них по одному Loopback-интерфейсу и присвоим им адреса 77.77.77.14 и 77.77.77.15, соответственно. Т.е. будет работать SNAT для приватных адресов, source-address будет подменяться на ip-адрес интерфейсов Loopback, а пакеты будут отправляться через внешние интерфейсы E0/2.
+
+##### Таблица NAT
+
+| Equipment | Local Inside [IP] | Global Inside [IP] | Local Inside [Port] | Global Inside [Port] | IP_Glob_Pool |
+|-------:|----:|:--------|-------:|:----|:--------|
+| R14 | 10.0.0.0/16 | 77.77.77.14 | e0/0; e0/1 | Loopback14 | 77.77.77.14/32 |
+| R15 | 10.0.0.0/16 | 77.77.77.15 | e0/0; e0/1 | Loopback14 | 77.77.77.15/32 |
+
+
+<details>
+ <summary>Настройки NAT на R14-R15</summary>
+
+``` bash
+#################
+#  NAT R14      #
+#################
+
+int Loopback14
+ ip address 77.77.77.14 mask 255.255.255.128
+!
+interface Ethernet0/2
+ ip nat outside
+!
+interface Ethernet0/0
+ ip nat inside
+!
+interface Ethernet0/1
+ ip nat inside
+!
+! настроим PAT c перегрузкой через интерфейс Ethernet0/2
+ip nat inside source list NAT_INSIDE_R14 interface Loopback14 overload
+!
+access-list 14 permit 10.0.0.0 0.0.255.255
+
+
+#################
+#  NAT R15      #
+#################
+
+int Loopback15
+ ip address 77.77.77.15 mask 255.255.255.128
+!
+interface Ethernet0/2
+ ip nat outside
+!
+interface Ethernet0/0
+ ip nat inside
+!
+interface Ethernet0/1
+ ip nat inside
+!
+! настроим PAT c перегрузкой через интерфейс interface Ethernet0/2
+ip nat inside source list NAT_INSIDE_R15 interface Loopback15 overload
+
+access-list 15 permit 10.0.0.0 0.0.255.255
+
+
+
+```
+</details>
+
+
+#### 2. Настроить NAT(PAT) на R18. Трансляция должна осуществляться в пул из 5 адресов автономной системы AS2042
+
+Настроим PAT на R18. Выделим пул из 5-ти публичных адресов из PI-диапазона. Укажем интерфейсы e0/0 и e0/2 в качестве "входных", а e0/1 и e0/3 - "выходных".
+
+<details>
+ <summary>Настройки NAT на R18</summary>
+
+``` bash
+#################
+#  NAT R18      #
+#################
+
+! Выделим пул из 5-ти публичных адресов из PI-диапазона ASN 2042
+ip nat pool NAT_POOL_R18 178.178.178.120 178.178.178.125 mask 255.255.255.128
+!
+interface Ethernet0/0
+ ip nat inside
+!
+interface Ethernet0/1
+ ip nat inside
+! 
+interface Ethernet0/2
+ ip nat outside
+!
+interface Ethernet0/3
+ ip nat outside
+!
+! настроим PAT c перегрузкой
+ip nat inside source list NAT_INSIDE_R18 pool NAT_POOL_R18 overload
+!
+access-list 18 permit 10.10.2.0 0.0.0.255
+access-list 18 permit 10.10.3.0 0.0.0.255
+
+```
+</details>
+
+#### 3. Настроить статический NAT для R20
