@@ -131,3 +131,32 @@ access-list 18 permit 10.10.3.0 0.0.0.255
 </details>
 
 #### 3. Настроить статический NAT для R20
+
+Настроим _static NAT_ на R20. В качестве _local inside_ будет выступать ip-адрес Loopback999. В качестве _global inside_ 10.1.10.20.
+
+<details>
+ <summary>Настройки Static NAT на R20</summary>
+
+``` bash
+###################
+# Static NAT R20  #
+###################
+
+! настроим статический NAT 172.16.0.20 -> 10.1.10.20
+ip nat inside source static 172.16.0.20 10.1.10.20
+!
+interface Ethernet0/0
+ ip nat inside
+!
+interface Ethernet0/1
+ ip nat inside
+
+```
+</details>
+
+
+#### 4. Настроить NAT так, чтобы R19 был доступен с любого узла для удаленного управления
+
+Для доступа к настройкам R19 из-вне (через NAT), необходимо сделать проброс (mapping) портов 21,22 (telnet и ssh) на пограничных роутерах, где настроен NAT.
+
+
