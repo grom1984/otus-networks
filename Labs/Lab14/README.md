@@ -187,12 +187,12 @@ ip nat inside source static tcp 10.1.0.19 22 77.77.77.14 2222
 
 #### 5. Настроить статический NAT(PAT) для офиса Чокурдах
 
-Настроим статический NAT для VLAN3 и VLAN4.
+Настроим статический NAT для VPC30 и VPC31.
 
 | Local Inside [IP] | Local Inside [Port] | Global Inside [IP] | Global Inside [Port] |
 |-------:|:----|--------:|:-------|
-| 10.12.3.1 | Ethernet0/2.3 (VLAN3) | 87.250.250.65 | Ethernet0/0 |
-| 10.12.4.1 | Ethernet0/2.4 (VLAN4) | 87.250.250.98 | Ethernet0/1 |
+| 10.12.3.30 | Ethernet0/2.3 (VLAN3) | 87.250.250.65 | Ethernet0/0 |
+| 10.12.4.31 | Ethernet0/2.4 (VLAN4) | 87.250.250.98 | Ethernet0/1 |
 
 <details>
  <summary>Настройка static NAT на R28</summary>
@@ -203,6 +203,184 @@ ip nat inside source static tcp 10.1.0.19 22 77.77.77.14 2222
 ###################
 
 
+ip nat inside source static 10.12.3.30 87.250.250.65
+ip nat inside source static 10.12.4.31 87.250.250.98
+!
+interface Ethernet0/0
+ ip nat outside
+!
+ interface Ethernet0/1
+ ip nat outside
+!
+interface Ethernet0/2.3
+ ip nat inside
+!
+interface Ethernet0/2.4
+ ip nat inside
 
 ```
 </details>
+
+
+#### 6. Настроить DHCP сервер в офисе Москва на маршрутизаторах R12 и R13. VPC1 и VPC7 должны получать сетевые настройки по DHCP
+
+Настроим HSRP на роутерах R12-R13. После настроим DHCP. На интерфейсах, смотрящих в сторону пользовательских подсетей настроим DHCP Relay Agent с осведомлённость о HSRP. Данная настройка позволит хостам, запрашивающим сетевые настройки, не получать настройки дважды (от каждого из роутеров).
+
+
+<details>
+ <summary>Настройка HSRP</summary>
+
+``` bash
+###################
+# Настройка  R12  #
+###################
+
+conf t
+service dhcp
+
+int e0/0
+ip address 10.0.2.2 255.255.255.0
+ip helper-address 10.0.2.1 redundancy HSRP
+standby 1 name HSRP
+standby 1 ip 10.0.2.1
+standby 1 priority 100
+standby 1 preempt
+
+#ipv6 
+standby version 2
+standby 2 ipv6 autoconfig
+standby 2 preempt
+standby 2 priority 110
+
+
+int e0/1
+ip address 10.0.3.2 255.255.255.0
+ip helper-address 10.0.3.1 redundancy HSRP
+standby 1 name HSRP
+standby 1 ip 10.0.3.1
+standby 1 priority 150
+standby 1 preempt
+
+#ipv6 
+standby version 2
+standby 2 ipv6 autoconfig
+standby 2 priority 90
+
+###################
+# Настройка  R13  #
+###################
+
+conf t
+service dhcp
+
+int e0/0
+ip address 10.0.2.4 255.255.255.0
+ip helper-address 10.0.2.1 redundancy HSRP
+standby 1 name HSRP
+standby 1 ip 10.0.2.1
+standby 1 priority 100
+standby 1 preempt
+#ipv6 
+standby version 2
+standby 2 ipv6 autoconfig
+standby 2 preempt
+standby 2 priority 110
+
+
+int e0/1
+ip address 10.0.3.4 255.255.255.0
+ip helper-address 10.0.3.1 redundancy HSRP
+standby 1 name HSRP
+standby 1 ip 10.0.3.1
+standby 1 priority 150
+standby 1 preempt
+#ipv6
+standby version 2
+standby 2 ipv6 autoconfig
+standby 2 priority 90
+
+```
+</details>
+
+<details>
+ <summary>Настройка DHCP</summary>
+
+``` bash
+###################
+# Настройка  R12  #
+###################
+
+conf t
+service dhcp
+ip dhcp excluded-address 10.0.2.1 10.0.2.50
+ip dhcp excluded-address 10.0.3.1 10.0.3.50
+ip dhcp excluded-address 10.0.2.1 10.0.2.254
+ip dhcp excluded-address 10.0.3.1 10.0.3.254
+
+ip dhcp pool POOL-VLAN2
+ network 10.0.2.0 255.255.255.0
+ default-router 10.0.2.1
+
+ip dhcp pool POOL-VLAN3
+ network 10.0.3.0 255.255.255.0
+ default-router 10.0.3.1
+
+ipv6 unicast-routing
+
+ipv6 dhcp pool IPV6-STATEFUL-2
+address prefix 2001:FFCC:1000:2::/64
+
+ipv6 dhcp pool IPV6-STATEFUL-3
+address prefix 2001:FFCC:1000:3::/64
+
+int e0/0
+ipv6 dhcp server IPV6-STATEFUL-2
+ipv6 nd managed-config-flag
+
+int e0/1
+ipv6 dhcp server IPV6-STATEFUL-3
+ipv6 nd managed-config-flag
+
+
+###################
+# Настройка  R13  #
+###################
+
+conf t
+
+ip dhcp excluded-address 10.0.2.1 10.0.2.50
+ip dhcp excluded-address 10.0.3.1 10.0.3.50
+ip dhcp excluded-address 10.0.2.1 10.0.2.254
+ip dhcp excluded-address 10.0.3.1 10.0.3.254
+
+ip dhcp pool POOL-VLAN2
+ network 10.0.2.0 255.255.255.0
+ default-router 10.0.2.1
+
+ip dhcp pool POOL-VLAN3
+ network 10.0.3.0 255.255.255.0
+ default-router 10.0.3.1
+
+ipv6 unicast-routing
+
+ipv6 dhcp pool IPV6-STATEFUL-2
+address prefix 2001:FFCC:1000:2::/64
+
+
+ipv6 dhcp pool IPV6-STATEFUL-3
+address prefix 2001:FFCC:1000:3::/64
+
+int e0/0
+ipv6 dhcp server IPV6-STATEFUL-2
+ipv6 nd managed-config-flag
+
+int e0/1
+ipv6 dhcp server IPV6-STATEFUL-3
+ipv6 nd managed-config-flag
+
+```
+</details>
+
+
+#### 7. Настроить NTP сервер на R12 и R13
+
