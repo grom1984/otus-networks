@@ -62,7 +62,7 @@ interface Ethernet0/1
  ip nat inside
 !
 ! настроим PAT c перегрузкой через интерфейс Ethernet0/2
-ip nat inside source list NAT_INSIDE_R14 interface Loopback14 overload
+ip nat inside source list 14 interface Loopback14 overload
 !
 access-list 14 permit 10.0.0.0 0.0.255.255
 
@@ -84,7 +84,7 @@ interface Ethernet0/1
  ip nat inside
 !
 ! настроим PAT c перегрузкой через интерфейс interface Ethernet0/2
-ip nat inside source list NAT_INSIDE_R15 interface Loopback15 overload
+ip nat inside source list 15 interface Loopback15 overload
 
 access-list 15 permit 10.0.0.0 0.0.255.255
 
@@ -122,7 +122,7 @@ interface Ethernet0/3
  ip nat outside
 !
 ! настроим PAT c перегрузкой
-ip nat inside source list NAT_INSIDE_R18 pool NAT_POOL_R18 overload
+ip nat inside source list 18 pool NAT_POOL_R18 overload
 !
 access-list 18 permit 10.10.2.0 0.0.0.255
 access-list 18 permit 10.10.3.0 0.0.0.255
@@ -146,9 +146,9 @@ access-list 18 permit 10.10.3.0 0.0.0.255
 ip nat inside source static 172.16.0.20 10.1.10.20
 !
 interface Ethernet0/0
- ip nat inside
+ ip nat outside
 !
-interface Ethernet0/1
+interface Loopback999
  ip nat inside
 
 ```
@@ -157,6 +157,33 @@ interface Ethernet0/1
 
 #### 4. Настроить NAT так, чтобы R19 был доступен с любого узла для удаленного управления
 
-Для доступа к настройкам R19 из-вне (через NAT), необходимо сделать проброс (mapping) портов 21,22 (telnet и ssh) на пограничных роутерах, где настроен NAT.
+Для доступа к настройкам R19 из-вне (через NAT), необходимо сделать проброс (mapping) портов 21,22 (telnet и ssh) на пограничных роутерах, где настроен NAT. (R14, R15).
 
+| WAN IP | WAN Port | LAN IP | LAN port | Service |
+|-------:|:---------|-------:|:---------|---------|
+| 77.77.77.14 | 2121 | 10.1.0.19 | 21 | telnet |
+| 77.77.77.14 | 2222 | 10.1.0.19 | 22 | ssh |
+
+<details>
+ <summary>Проброс портов 21-22 для R19</summary>
+
+``` bash
+###################
+# Настройка  R14  #
+###################
+
+interface Ethernet0/0
+ ip nat inside
+ 
+interface Ethernet0/2
+ ip nat outside
+
+ip nat inside source static tcp 10.1.0.19 21 77.77.77.14 2121
+ip nat inside source static tcp 10.1.0.19 22 77.77.77.14 2222
+
+
+```
+</details>
+
+#### 5. Настроить статический NAT(PAT) для офиса Чокурдах
 
