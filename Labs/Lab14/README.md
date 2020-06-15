@@ -189,8 +189,8 @@ ip nat inside source static tcp 10.1.0.19 22 77.77.77.14 2222
 
 Настроим статический NAT для VLAN3 и VLAN4.
 
-Local Inside [IP] | Local Inside [Port] | Global Inside [IP] | Global Inside [Port]
-|-------:|----:|:--------|-------:|:----|
+| Local Inside [IP] | Local Inside [Port] | Global Inside [IP] | Global Inside [Port] |
+|-------:|:----|--------:|:-------|
 | 10.12.3.1 | Ethernet0/2.3 (VLAN3) | 87.250.250.65 | Ethernet0/0 |
 | 10.12.4.1 | Ethernet0/2.4 (VLAN4) | 87.250.250.98 | Ethernet0/1 |
 
