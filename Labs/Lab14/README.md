@@ -381,6 +381,18 @@ ipv6 nd managed-config-flag
 ```
 </details>
 
+<details>
+ <summary>Проверка получения сетевых настроек по DHCP</summary>
+
+__VPC1__
+
+!(DHCP_VPC1)[DHCP_VPC1.png]
+
+__VPC7__
+
+!(DHCP_VPC7)[DHCP_VPC7.png]
+
+</details>
 
 #### 7. Настроить NTP сервер на R12 и R13
 
