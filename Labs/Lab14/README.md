@@ -314,8 +314,8 @@ conf t
 service dhcp
 ip dhcp excluded-address 10.0.2.1 10.0.2.50
 ip dhcp excluded-address 10.0.3.1 10.0.3.50
-ip dhcp excluded-address 10.0.2.1 10.0.2.254
-ip dhcp excluded-address 10.0.3.1 10.0.3.254
+ip dhcp excluded-address 10.0.2.254
+ip dhcp excluded-address 10.0.3.254
 
 ip dhcp pool POOL-VLAN2
  network 10.0.2.0 255.255.255.0
@@ -350,8 +350,8 @@ conf t
 
 ip dhcp excluded-address 10.0.2.1 10.0.2.50
 ip dhcp excluded-address 10.0.3.1 10.0.3.50
-ip dhcp excluded-address 10.0.2.1 10.0.2.254
-ip dhcp excluded-address 10.0.3.1 10.0.3.254
+ip dhcp excluded-address 10.0.2.254
+ip dhcp excluded-address 10.0.3.254
 
 ip dhcp pool POOL-VLAN2
  network 10.0.2.0 255.255.255.0
