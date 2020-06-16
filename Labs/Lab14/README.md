@@ -385,19 +385,19 @@ ipv6 nd managed-config-flag
 #### 7. Настроить NTP сервер на R12 и R13
 
 Настроим роутеры R12-R13 в качестве NTP-серверов, остальные устройства как NTP-клиенты.
-Ограничим доступ к NTP-серверам, кроме устройств из подсетей МСК.
+Ограничим доступ к NTP-серверам, кроме устройств из подсетей МСК. NTP-клиентам разрешим обновлять время только с наших серверов (R12-R13).
 
 | ver. IP | network | 
 |---|--- |
 | ipv4: | 10.0.0.0/14 |
 | ipv6: | 2001:FFCC:1000::/48 |
 
-NTP network
+##### NTP network
 
 ![ntp_network](ntp_network.png)
 
 <details>
- <summary>Настройка DHCP</summary>
+ <summary>Настройка NTP</summary>
 
 ``` bash
 ###################
@@ -406,6 +406,254 @@ NTP network
 
 conf t
 
+ntp master 2
+ clock timezone UTC 3
+ ip access-list standard 2
+  10 permit 10.0.0.0 0.3.255.255
+  100 deny any
+  exit
+ ntp access-group ipv4 serve-only 2
+ 
+ ipv6 access-list NTPSERVER_IPV6_ACL
+  permit ipv6 host FE80::14 host FE80::12 sequence 10
+  permit ipv6 host FE80::15 host FE80::12 sequence 20
+  permit ipv6 host FE80::19 host FE80::12 sequence 30
+  permit ipv6 host FE80::13 host FE80::12 sequence 40
+  permit ipv6 host FE80::20 host FE80::12 sequence 50
+  permit ipv6 host FE80::4 host FE80::12 sequence 60
+  permit ipv6 host FE80::5 host FE80::12 sequence 70
+  permit ipv6 host FE80::3 host FE80::12 sequence 80
+  permit ipv6 host FE80::2 host FE80::12 sequence 90
+  permit ipv6 2001:FFCC:1000::/48 any sequence 100
+  deny ipv6 any any sequence 400
+  exit
+ ntp access-group ipv6 serve-only NTPSERVER_IPV6_ACL
+
+clock calendar-valid
+ntp update-calendar
+
+###################
+# Настройка  R13  #
+###################
+
+conf t
+
+ntp master 2
+ clock timezone UTC 3
+ ip access-list standard 2
+  10 permit 10.0.0.0 0.3.255.255
+  100 deny any
+  exit
+ ntp access-group ipv4 serve-only 2
+ 
+ ipv6 access-list NTPSERVER_IPV6_ACL
+  permit ipv6 host FE80::14 host FE80::13 sequence 10
+  permit ipv6 host FE80::15 host FE80::13 sequence 20
+  permit ipv6 host FE80::19 host FE80::13 sequence 30
+  permit ipv6 host FE80::12 host FE80::13 sequence 40
+  permit ipv6 host FE80::20 host FE80::13 sequence 50
+  permit ipv6 host FE80::4 host FE80::12 sequence 60
+  permit ipv6 host FE80::5 host FE80::12 sequence 70
+  permit ipv6 host FE80::3 host FE80::12 sequence 80
+  permit ipv6 host FE80::2 host FE80::12 sequence 90
+  permit ipv6 2001:FFCC:1000::/48 any sequence 100
+  deny ipv6 any any sequence 400
+  exit
+ ntp access-group ipv6 serve-only NTPSERVER_IPV6_ACL
+
+clock calendar-valid
+ntp update-calendar
+
+###################
+# Настройка  R19  #
+###################
+
+conf t
+!
+ ntp server 10.1.2.12
+ ntp server FE80::12
+ ntp server 2001:FFCC:1000:1214:12
+ ntp server 10.1.4.13
+ ntp server FE80::13
+ ntp server 2001:FFCC:1000:1314:13
+ 
+ 
+ ip access-list standard 2
+  10 permit 10.1.2.12 0.0.0.0
+  20 permit 10.1.4.13 0.0.0.0
+  400 deny any
+  exit
+ ntp access-group ipv4 peer 2
+!
+ ipv6 access-list NTPSERVER_IPV6_ACL
+  permit ipv6 host FE80::9 any sequence 10
+  permit ipv6 host 2001:FFCC:1000:1214:12 any sequence 20
+  permit ipv6 host 2001:FFCC:1000:1314:13 any sequence 30
+  deny ipv6 any any sequence 400
+  exit
+ ntp access-group ipv6 peer NTPSERVER_IPV6_ACL
+ exit
+
+clock timezone UTC 3
+clock calendar-valid
+ntp update-calendar
+ 
+###################
+# Настройка  R14  #
+###################
+
+conf t
+!
+ ntp server 10.1.2.12 prefer
+ ntp server FE80::12 prefer
+ ntp server 2001:FFCC:1000:1214:12 prefer
+ ntp server 10.1.4.13
+ ntp server FE80::13
+ ntp server 2001:FFCC:1000:1314:13
+ 
+ 
+ ip access-list standard 2
+  10 permit 10.1.2.12 0.0.0.0
+  20 permit 10.1.4.13 0.0.0.0
+  400 deny any
+  exit
+ ntp access-group ipv4 peer 2
+!
+ ipv6 access-list NTPSERVER_IPV6_ACL
+  permit ipv6 host FE80::9 any sequence 10
+  permit ipv6 host 2001:FFCC:1000:1214:12 any sequence 20
+  permit ipv6 host 2001:FFCC:1000:1314:13 any sequence 30
+  deny ipv6 any any sequence 400
+  exit
+ ntp access-group ipv6 peer NTPSERVER_IPV6_ACL
+ exit
+
+clock timezone UTC 3
+clock calendar-valid
+ntp update-calendar
+
+###################
+# Настройка  R15  #
+###################
+
+conf t
+!
+ ntp server 10.1.8.13 prefer
+ ntp server FE80::13 prefer
+ ntp server 2001:FFCC:1000:1315:13 prefer
+ ntp server 10.1.6.12
+ ntp server FE80::12
+ ntp server 2001:FFCC:1000:1215:12
+ 
+ 
+ ip access-list standard 2
+  10 permit 10.1.8.13 0.0.0.0
+  20 permit 10.1.6.12 0.0.0.0
+  400 deny any
+  exit
+ ntp access-group ipv4 peer 2
+!
+ ipv6 access-list NTPSERVER_IPV6_ACL
+  permit ipv6 host FE80::9 any sequence 10
+  permit ipv6 host 2001:FFCC:1000:1315:13 any sequence 20
+  permit ipv6 host 2001:FFCC:1000:1215:12 any sequence 30
+  deny ipv6 any any sequence 400
+  exit
+ ntp access-group ipv6 peer NTPSERVER_IPV6_ACL
+ exit
+
+clock timezone UTC 3
+clock calendar-valid
+ntp update-calendar
+
+###################
+# Настройка  R20  #
+###################
+
+conf t
+!
+ ntp server 10.1.8.13
+ ntp server FE80::13
+ ntp server 2001:FFCC:1000:1315:13
+ ntp server 10.1.6.12
+ ntp server FE80::12
+ ntp server 2001:FFCC:1000:1215:12
+ 
+ 
+ ip access-list standard 2
+  10 permit 10.1.8.13 0.0.0.0
+  20 permit 10.1.6.12 0.0.0.0
+  400 deny any
+  exit
+ ntp access-group ipv4 peer 2
+!
+ ipv6 access-list NTPSERVER_IPV6_ACL
+  permit ipv6 host FE80::9 any sequence 10
+  permit ipv6 host 2001:FFCC:1000:1315:13 any sequence 20
+  permit ipv6 host 2001:FFCC:1000:1215:12 any sequence 30
+  deny ipv6 any any sequence 400
+  exit
+ ntp access-group ipv6 peer NTPSERVER_IPV6_ACL
+ exit
+
+clock timezone MSK 3
+clock calendar-valid
+ntp update-calendar
+
+
+###################
+# Настройка  SW4  #
+###################
+
+conf t
+ntp server 10.0.2.2
+ntp server 2001:FFCC:1000:2::2
+ntp server 10.0.3.5
+ntp server 2001:FFCC:1000:3::5
+
+clock timezone UTC 3
+clock calendar-valid
+ntp update-calendar
+
+###################
+# Настройка  SW5  #
+###################
+
+conf t
+ntp server 10.0.2.5
+ntp server 2001:FFCC:1000:2::5
+ntp server 10.0.3.4
+ntp server 2001:FFCC:1000:3::4
+
+clock timezone UTC 3
+clock calendar-valid
+
+###################
+# Настройка  SW3  #
+###################
+
+conf t
+ntp server 10.0.2.2
+ntp server 2001:FFCC:1000:2::2
+ntp server 10.0.3.5
+ntp server 2001:FFCC:1000:3::5
+
+clock timezone UTC 3
+clock calendar-valid
+ntp update-calendar
+
+###################
+# Настройка  SW2  #
+###################
+
+conf t
+ntp server 10.0.2.5
+ntp server 2001:FFCC:1000:2::5
+ntp server 10.0.3.4
+ntp server 2001:FFCC:1000:3::4
+
+clock timezone UTC 3
+clock calendar-valid
 
 ```
 </details>
