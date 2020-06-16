@@ -386,11 +386,11 @@ ipv6 nd managed-config-flag
 
 __VPC1__
 
-!(DHCP_VPC1)[DHCP_VPC1.png]
+![DHCP_VPC1](DHCP_VPC1.png)
 
 __VPC7__
 
-!(DHCP_VPC7)[DHCP_VPC7.png]
+![DHCP_VPC7](DHCP_VPC7.png)
 
 </details>
 
