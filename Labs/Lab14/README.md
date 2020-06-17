@@ -464,10 +464,10 @@ ntp master 2
   permit ipv6 host FE80::19 host FE80::13 sequence 30
   permit ipv6 host FE80::12 host FE80::13 sequence 40
   permit ipv6 host FE80::20 host FE80::13 sequence 50
-  permit ipv6 host FE80::4 host FE80::12 sequence 60
-  permit ipv6 host FE80::5 host FE80::12 sequence 70
-  permit ipv6 host FE80::3 host FE80::12 sequence 80
-  permit ipv6 host FE80::2 host FE80::12 sequence 90
+  permit ipv6 host FE80::4 host FE80::13 sequence 60
+  permit ipv6 host FE80::5 host FE80::13 sequence 70
+  permit ipv6 host FE80::3 host FE80::13 sequence 80
+  permit ipv6 host FE80::2 host FE80::13 sequence 90
   permit ipv6 2001:FFCC:1000::/48 any sequence 100
   deny ipv6 any any sequence 400
   exit
