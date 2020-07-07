@@ -25,11 +25,11 @@
 | R18 | tun14186 | ipv6 | FD00:FFCC:1418::1/127 | 2001:FFCC:2042:178::118  | 2001:FFCC:1001:77::114 |
 | R18 | tun14186 | ipv6 LL | FE80:18  |  |  |
 | R15 | tun1518 | ipv4 | 192.168.0.5/30 | 77.77.77.115 | 178.178.178.115 |
-| R15 | tun15186 | ipv6 | FD00:FFCC:1518::0/127 | 2001:FFCC:1001:77: |  |
+| R15 | tun15186 | ipv6 | FD00:FFCC:1518::0/127 | 2001:FFCC:1001:77:115 | 2001:FFCC:2042:178::119 |
 | R15 | tun15186 | ipv6 LL | FE80:15 |  |  |
 | R18 | tun1518 | ipv4 | 192.168.0.6/30 | 178.178.178.115 | 77.77.77.115 |
-| R14 | tun14186 | ipv6 | FD00:FFCC:1518::1/127 |  |  |
-| R14 | tun14186 | ipv6 LL |  |  |  |
+| R18 | tun15186 | ipv6 | FD00:FFCC:1518::1/127 | 2001:FFCC:2042:178::119 | 2001:FFCC:1001:77:115 |
+| R18 | tun15186 | ipv6 LL |  |  |  |
 
 <details>
  <summary>Настройки NAT на R14-R15</summary>
@@ -40,48 +40,96 @@
 ###################
 
 conf t
-int tun14
-description "GRE Tunnel MSK-SPb"
-ip addr 192.168.0.1 255.255.255.252
-ipv6 addr 2001:FFCC:1001:77::
-ip mtu 1400
-ip tcp adjust-mss 1360
-tunnel source 77.77.77.114
-tunnel destination 178.178.178.118
+int tun1418
+  description "GREv4 Tunnel MSK-SPb to R18"
+  ip addr 192.168.0.1 255.255.255.252
+  ip mtu 1400
+  ip tcp adjust-mss 1360
+  tunnel source 77.77.77.114
+  tunnel destination 178.178.178.118
+  tunnel mode gre ipv4
+  no shutdown
+
+int tun14186
+  description "GREv6 Tunnel MSK-SPb to R18"
+  ipv6 enable
+  ipv6 address FE80::14 link-local
+  ipv6 address FD00:FFCC:1418::0/127
+  tunnel source 2001:FFCC:1001:77::114
+  tunnel destination 2001:FFCC:2042:178::118
+  tunnel mode gre ipv6
+  no shutdown
 
 ###################
 # Настройка R18   #
 ###################
 
 conf t
-int tun14
-description "GRE Tunnel SPb-MSK"
-ip addr 192.168.0.2 255.255.255.252
-ip mtu 1400
-ip tcp adjust-mss 1360
-tunnel source 178.178.178.118
-tunnel destination 77.77.77.114
+int tun1418
+  description "GREv4 Tunnel SPb-MSK to R14"
+  ip addr 192.168.0.2 255.255.255.252
+  ip mtu 1400
+  ip tcp adjust-mss 1360
+  tunnel source 178.178.178.118
+  tunnel destination 77.77.77.114
+  tunnel mode gre ipv4
+  no shutdown
 
-int tun15
-description "GRE Tunnel SPb-MSK"
-ip addr 192.168.0.6 255.255.255.252
-ip mtu 1400
-ip tcp adjust-mss 1360
-tunnel source 178.178.178.115
-tunnel destination 77.77.77.115
+int tun14186  
+  description "GREv6 Tunnel MSK-SPb to R14"
+  ipv6 enable
+  ipv6 address FE80::18 link-local
+  ipv6 address FD00:FFCC:1418::1/127
+  tunnel source 2001:FFCC:2042:178::118
+  tunnel destination 2001:FFCC:1001:77::114
+  tunnel mode gre ipv6
+  no shutdown
+  
+int tun1518
+  description "GREv4 Tunnel SPb-MSK to R15"
+  ip addr 192.168.0.6 255.255.255.252
+  ip mtu 1400
+  ip tcp adjust-mss 1360
+  tunnel source 178.178.178.119
+  tunnel destination 77.77.77.115
+  tunnel mode gre ipv4
+  no shutdown
 
+int tun15186  
+  description "GREv6 Tunnel SPb-MSK to R15"
+  ipv6 enable
+  ipv6 address FE80::18 link-local
+  ipv6 address FD00:FFCC:1518::1/127
+  tunnel source 2001:FFCC:2042:178::119
+  tunnel destination 2001:FFCC:1001:77::115
+  tunnel mode gre ipv6
+  no shutdown 
+  
 ###################
 # Настройка R15   #
 ###################
 
 conf t
-int tun15
-description "GRE Tunnel MSK-SPb"
-ip addr 192.168.0.5 255.255.255.252
-ip mtu 1400
-ip tcp adjust-mss 1360
-tunnel source 77.77.77.115
-tunnel destination 178.178.178.115
+int tun1518
+  description "GREv4 Tunnel SPb-MSK to R18"
+  ip addr 192.168.0.5 255.255.255.252
+  ip mtu 1400
+  ip tcp adjust-mss 1360
+  tunnel source 77.77.77.115
+  tunnel destination 178.178.178.119
+  tunnel mode gre ipv4
+  no shutdown
+
+int Tun15186
+  description "GREv6 Tunnel SPb-MSK to R18"
+  ipv6 enable
+  ipv6 address FE80::15 link-local
+  ipv6 address FD00:FFCC:1518::0/127
+  tunnel source 2001:FFCC:1001:77::115
+  tunnel destination 2001:FFCC:2042:178::119
+  tunnel mode gre ipv6
+  no shutdown
+
 
 ```
 </details>
