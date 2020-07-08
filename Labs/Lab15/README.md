@@ -163,7 +163,14 @@ int Tun15186
 
 ##### Таблица адресов туннелей DMVPN
 
-
+| Eq | Tunnel | IP ver | Address | Network | Description |
+|:---|:---|:---|:---|:---|:---|:---|
+| R15  | tun0  | ipv4  | 192.168.10.15  | 192.168.10.0/24  | Hub  |
+| R15  | tun0  | ipv6  |   |   | Hub  |
+| R27  | tun0  | ipv4  | 192.168.10.27  | 192.168.10.0/24  | Spoke  |
+| R27  | tun0  | ipv6  |   |   | Hub  |
+| R28  | tun0  | ipv4  | 192.168.10.28  | 192.168.10.0/24  | Spoke  |
+| R28  | tun0  | ipv6  |   |   | Hub  |
 
 <details>
  <summary>Настройки DMVPN</summary>
