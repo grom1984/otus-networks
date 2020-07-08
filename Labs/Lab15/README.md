@@ -47,7 +47,7 @@ __tun14186__ туннель между роутерами R14-R18 GREv6
 | R18 | tun15186 | ipv6 LL |  |  |  |
 
 <details>
- <summary>Настройки NAT на R14-R15</summary>
+ <summary>Настройки GRE</summary>
 
 ``` bash
 ###################
@@ -60,7 +60,7 @@ int tun1418
   ip addr 192.168.0.1 255.255.255.252
   ip mtu 1400
   ip tcp adjust-mss 1360
-  tunnel source 77.77.77.114
+  tunnel source Ethernet0/2
   tunnel destination 178.178.178.118
   tunnel mode gre ipv4
   no shutdown
@@ -70,7 +70,7 @@ int tun14186
   ipv6 enable
   ipv6 address FE80::14 link-local
   ipv6 address FD00:FFCC:1418::0/127
-  tunnel source 2001:FFCC:1001:77::114
+  tunnel source Ethernet0/2
   tunnel destination 2001:FFCC:2042:178::118
   tunnel mode gre ipv6
   no shutdown
@@ -85,7 +85,7 @@ int tun1418
   ip addr 192.168.0.2 255.255.255.252
   ip mtu 1400
   ip tcp adjust-mss 1360
-  tunnel source 178.178.178.118
+  tunnel source Ethernet0/2
   tunnel destination 77.77.77.114
   tunnel mode gre ipv4
   no shutdown
@@ -95,7 +95,7 @@ int tun14186
   ipv6 enable
   ipv6 address FE80::18 link-local
   ipv6 address FD00:FFCC:1418::1/127
-  tunnel source 2001:FFCC:2042:178::118
+  tunnel source Ethernet0/2
   tunnel destination 2001:FFCC:1001:77::114
   tunnel mode gre ipv6
   no shutdown
@@ -105,7 +105,7 @@ int tun1518
   ip addr 192.168.0.6 255.255.255.252
   ip mtu 1400
   ip tcp adjust-mss 1360
-  tunnel source 178.178.178.119
+  tunnel source Ethernet0/3
   tunnel destination 77.77.77.115
   tunnel mode gre ipv4
   no shutdown
@@ -115,7 +115,7 @@ int tun15186
   ipv6 enable
   ipv6 address FE80::18 link-local
   ipv6 address FD00:FFCC:1518::1/127
-  tunnel source 2001:FFCC:2042:178::119
+  tunnel source Ethernet0/3
   tunnel destination 2001:FFCC:1001:77::115
   tunnel mode gre ipv6
   no shutdown 
@@ -130,7 +130,7 @@ int tun1518
   ip addr 192.168.0.5 255.255.255.252
   ip mtu 1400
   ip tcp adjust-mss 1360
-  tunnel source 77.77.77.115
+  tunnel source Ethernet0/2
   tunnel destination 178.178.178.119
   tunnel mode gre ipv4
   no shutdown
@@ -140,7 +140,7 @@ int Tun15186
   ipv6 enable
   ipv6 address FE80::15 link-local
   ipv6 address FD00:FFCC:1518::0/127
-  tunnel source 2001:FFCC:1001:77::115
+  tunnel source Ethernet0/2
   tunnel destination 2001:FFCC:2042:178::119
   tunnel mode gre ipv6
   no shutdown
@@ -154,4 +154,61 @@ int Tun15186
 ###### Топология DMVPN туннелей
 
 ![DMVPN](DMVPN.png)
+
+<details>
+ <summary>Настройки DMVPN</summary>
+
+ ``` bash
+
+ #####################
+# DMVPN R15 (Hub)   #
+#####################
+
+int tun0
+  ip addr ip/mask
+  ip nhrp auth otus
+  ip nhrp network-id 1
+  tunnel source ip (или порт)
+  tunnel mode gre multipoint
+  ip nhrp map multicast dynamic
+  ##для phase 3
+  #ip nhrp redirect
+
+#####################
+# DMVPN R27 (Spoke) #
+#####################
+
+int tun0
+  ip addr ip/mask
+  ip nhrp auth otus
+  ip nhrp network-id 1
+  ip nhrp nhs [внутренний-ip-хаба]
+  ip nhrp map [внутренний-ip] [внешний-ip]
+  tunnel mode gre multipoint
+  tunnel source ip
+  #tunnel dest ip (в фазе 2 не нужен!)
+  ##для phase 3
+  #ip nhrp shortcut
+  #ip nhrp redirect
+
+#####################
+# DMVPN R28 (Spoke) #
+#####################
+
+int tun0
+  ip addr ip/mask
+  ip nhrp auth otus
+  ip nhrp network-id 1
+  ip nhrp nhs [внутренний-ip-хаба]
+  ip nhrp map [внутренний-ip] [внешний-ip]
+  tunnel mode gre multipoint
+  tunnel source ip
+  #tunnel dest ip (в фазе 2 не нужен!)
+  ##для phase 3
+  #ip nhrp shortcut
+  #ip nhrp redirect
+
+
+ ```
+</details>
 
