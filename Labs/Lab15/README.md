@@ -192,6 +192,7 @@ int Tun15186
 #####################
 
 int tun0
+  desc "DMVPN (Hub) R15-R27-R28"
   ip addr 192.168.10.15 255.255.255.0
   ip nhrp auth otus
   ip nhrp network-id 1
@@ -203,12 +204,14 @@ int tun0
   ipv6 address FD00:FFCC:10::15/64
   ##для phase 3
   #ip nhrp redirect
+  no shutdown
 
 #####################
 # DMVPN R27 (Spoke) #
 #####################
 
 int tun0
+  desc "DMVPN (Spoke) R15-R27-R28"
   ip addr 192.168.10.27 255.255.255.0
   ip nhrp auth otus
   ip nhrp network-id 1
@@ -224,12 +227,14 @@ int tun0
   ##для phase 3
   ip nhrp shortcut
   ip nhrp redirect
+  no shutdown
 
 #####################
 # DMVPN R28 (Spoke) #
 #####################
 
 int tun0
+  desc "DMVPN (Spoke) R15-R27-R28"
   ip addr 192.168.10.28 255.255.255.0
   ip nhrp auth otus
   ip nhrp network-id 1
@@ -245,6 +250,7 @@ int tun0
   ##для phase 3
   ip nhrp shortcut
   ip nhrp redirect
+  no shutdown
 
  ```
 </details>
