@@ -156,36 +156,46 @@ int Tun15186
 
 ![DMVPN](DMVPN.png)
 
-Для объединения трёх офисов по средствам туннелей воспользуемся проприетарной технологией DMVPN. Данная технология позволяет создавать динамические туннели между точками подключения, объединив их в full mesh сеть. При этом, не нужно вручную настраивать отдельные GRE-туннели типа p-t-p между отдельными устройствами, тем самым простить настройки оборудования.\
+Для объединения трёх офисов по средствам туннелей воспользуемся проприетарной технологией DMVPN. Данная технология позволяет создавать динамические туннели между точками подключения, объединив их в full mesh сеть. При этом, не нужно вручную настраивать отдельные GRE-туннели типа p-t-p между отдельными устройствами, тем самым упростить настройки оборудования.\
 Выделим подсеть 192.168.10.0/24 для DMVPN туннелей.\
 Внутренние адреса туннелей вычисляются по шаблону _192.168.10.{номер_роутера}_. Например, для R15 192.168.10.15\
 Настроим DMVPN в 3й фазе (phase 3). Данный режим позволяет передавать multicast, необходимый для работы IGP-протоколов маршрутизации. Это позволит в дальнейшем настроить OSPF/EIGRP/ISIS внутри офисов Лабытнанги и Чокурдах и обмена маршрутной информацией с МСК и СПб.
 
+##### Подсети для туннелей DMVPN
+
+| Network | IP ver | Description |
+|:--- |:--- |:--- |
+| 192.168.10.0/24 | ipv4 | Адресация туннелей DMVPN между офисами __МСК__ (R15 Hub) __Чокурдах__ (R28 Spoke) __Лабытнанги__ (R27 Spoke). |
+| FD00:FFCC:10::/48| ipv6 | Адресация туннелей DMVPN между офисами __МСК__ (R15 Hub) __Чокурдах__ (R28 Spoke) __Лабытнанги__ (R27 Spoke).|
+
 ##### Таблица адресов туннелей DMVPN
 
 | Eq | Tunnel | IP ver | Address | Network | Description |
-|:---|:---|:---|:---|:---|:---|:---|
+|:---|:---|:---|:---|:---|:---|
 | R15  | tun0  | ipv4  | 192.168.10.15  | 192.168.10.0/24  | Hub  |
-| R15  | tun0  | ipv6  |   |   | Hub  |
+| R15  | tun0  | ipv6  | FD00:FFCC:10::15  | FD00:FFCC:10::48  | Hub  |
+| R15  | tun0  | ipv6 LL  | FE80::15  | FE80::/10  | Hub  |
 | R27  | tun0  | ipv4  | 192.168.10.27  | 192.168.10.0/24  | Spoke  |
-| R27  | tun0  | ipv6  |   |   | Hub  |
+| R27  | tun0  | ipv6  | FD00:FFCC:10::27  | FD00:FFCC:10::/48  | Spoke  |
+| R27  | tun0  | ipv6 LL  | FE80::27  |  FE80::/10 | Spoke  |
 | R28  | tun0  | ipv4  | 192.168.10.28  | 192.168.10.0/24  | Spoke  |
-| R28  | tun0  | ipv6  |   |   | Hub  |
+| R28  | tun0  | ipv6  | FD00:FFCC:10::28  | FD00:FFCC:10::/48  | Spoke  |
+| R28  | tun0  | ipv6 LL  | FE80::28  | FE80::/10  | Spoke  |
 
 <details>
  <summary>Настройки DMVPN</summary>
 
  ``` bash
 
- #####################
+#####################
 # DMVPN R15 (Hub)   #
 #####################
 
 int tun0
-  ip addr ip/mask
+  ip addr 192.168.10.15 255.255.255.0
   ip nhrp auth otus
   ip nhrp network-id 1
-  tunnel source ip (или порт)
+  tunnel source Ethernet0/2
   tunnel mode gre multipoint
   ip nhrp map multicast dynamic
   ##для phase 3
@@ -196,34 +206,36 @@ int tun0
 #####################
 
 int tun0
-  ip addr ip/mask
+  ip addr 192.168.10.27 255.255.255.0
   ip nhrp auth otus
   ip nhrp network-id 1
-  ip nhrp nhs [внутренний-ip-хаба]
-  ip nhrp map [внутренний-ip] [внешний-ip]
+  ip nhrp nhs 192.168.10.15
+  ip nhrp map 192.168.10.15 2.2.2.15
+  ip nhrp map multicast 2.2.2.15
   tunnel mode gre multipoint
-  tunnel source ip
-  #tunnel dest ip (в фазе 2 не нужен!)
+  tunnel source Ethernet0/0
+  #tunnel dest ip (в фазах 2-3 не нужен!)
   ##для phase 3
-  #ip nhrp shortcut
-  #ip nhrp redirect
+  ip nhrp shortcut
+  ip nhrp redirect
 
 #####################
 # DMVPN R28 (Spoke) #
 #####################
 
 int tun0
-  ip addr ip/mask
+  ip addr 192.168.10.28 255.255.255.0
   ip nhrp auth otus
   ip nhrp network-id 1
-  ip nhrp nhs [внутренний-ip-хаба]
-  ip nhrp map [внутренний-ip] [внешний-ip]
+  ip nhrp nhs 192.168.10.15
+  ip nhrp map 192.168.10.15 2.2.2.15
+  ip nhrp map multicast 2.2.2.15
   tunnel mode gre multipoint
-  tunnel source ip
-  #tunnel dest ip (в фазе 2 не нужен!)
+  tunnel source Ethernet0/1
+  #tunnel dest ip (в фазах 2-3 не нужен!)
   ##для phase 3
-  #ip nhrp shortcut
-  #ip nhrp redirect
+  ip nhrp shortcut
+  ip nhrp redirect
 
 
  ```
