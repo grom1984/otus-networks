@@ -173,13 +173,13 @@ int Tun15186
 | Eq | Tunnel | IP ver | Address | Network | Description |
 |:---|:---|:---|:---|:---|:---|
 | R15  | tun0  | ipv4  | 192.168.10.15  | 192.168.10.0/24  | Hub  |
-| R15  | tun0  | ipv6  | FD00:FFCC:10::15  | FD00:FFCC:10::48  | Hub  |
+| R15  | tun0  | ipv6  | FD00:FFCC:10::15  | FD00:FFCC:10::/64  | Hub  |
 | R15  | tun0  | ipv6 LL  | FE80::15  | FE80::/10  | Hub  |
 | R27  | tun0  | ipv4  | 192.168.10.27  | 192.168.10.0/24  | Spoke  |
-| R27  | tun0  | ipv6  | FD00:FFCC:10::27  | FD00:FFCC:10::/48  | Spoke  |
+| R27  | tun0  | ipv6  | FD00:FFCC:10::27  | FD00:FFCC:10::/64  | Spoke  |
 | R27  | tun0  | ipv6 LL  | FE80::27  |  FE80::/10 | Spoke  |
 | R28  | tun0  | ipv4  | 192.168.10.28  | 192.168.10.0/24  | Spoke  |
-| R28  | tun0  | ipv6  | FD00:FFCC:10::28  | FD00:FFCC:10::/48  | Spoke  |
+| R28  | tun0  | ipv6  | FD00:FFCC:10::28  | FD00:FFCC:10::/64  | Spoke  |
 | R28  | tun0  | ipv6 LL  | FE80::28  | FE80::/10  | Spoke  |
 
 <details>
@@ -198,6 +198,9 @@ int tun0
   tunnel source Ethernet0/2
   tunnel mode gre multipoint
   ip nhrp map multicast dynamic
+  ipv6 enable
+  ipv6 address FE80::15 link-local
+  ipv6 address FD00:FFCC:10::15/64
   ##для phase 3
   #ip nhrp redirect
 
@@ -214,6 +217,9 @@ int tun0
   ip nhrp map multicast 2.2.2.15
   tunnel mode gre multipoint
   tunnel source Ethernet0/0
+  ipv6 enable
+  ipv6 address FE80::27 link-local
+  ipv6 address FD00:FFCC:10::27/64
   #tunnel dest ip (в фазах 2-3 не нужен!)
   ##для phase 3
   ip nhrp shortcut
@@ -232,11 +238,13 @@ int tun0
   ip nhrp map multicast 2.2.2.15
   tunnel mode gre multipoint
   tunnel source Ethernet0/1
+  ipv6 enable
+  ipv6 address FE80::28 link-local
+  ipv6 address FD00:FFCC:10::28/64
   #tunnel dest ip (в фазах 2-3 не нужен!)
   ##для phase 3
   ip nhrp shortcut
   ip nhrp redirect
-
 
  ```
 </details>
