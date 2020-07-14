@@ -166,20 +166,20 @@ int Tun15186
 | Network | IP ver | Description |
 |:--- |:--- |:--- |
 | 192.168.10.0/24 | ipv4 | Адресация туннелей DMVPN между офисами __МСК__ (R15 Hub) __Чокурдах__ (R28 Spoke) __Лабытнанги__ (R27 Spoke). |
-| FD00:FFCC:10::/48| ipv6 | Адресация туннелей DMVPN между офисами __МСК__ (R15 Hub) __Чокурдах__ (R28 Spoke) __Лабытнанги__ (R27 Spoke).|
+| FD00:FFCC:FFFF:10::/48| ipv6 | Адресация туннелей DMVPN между офисами __МСК__ (R15 Hub) __Чокурдах__ (R28 Spoke) __Лабытнанги__ (R27 Spoke).|
 
 ##### Таблица адресов туннелей DMVPN
 
 | Eq | Tunnel | IP ver | Address | Network | Description |
 |:---|:---|:---|:---|:---|:---|
 | R15  | tun0  | ipv4  | 192.168.10.15  | 192.168.10.0/24  | Hub  |
-| R15  | tun0  | ipv6  | FD00:FFCC:10::15  | FD00:FFCC:10::/64  | Hub  |
+| R15  | tun0  | ipv6  | FD00:FFCC:FFFF:10::15  | FD00:FFCC:10::/64  | Hub  |
 | R15  | tun0  | ipv6 LL  | FE80::15  | FE80::/10  | Hub  |
 | R27  | tun0  | ipv4  | 192.168.10.27  | 192.168.10.0/24  | Spoke  |
-| R27  | tun0  | ipv6  | FD00:FFCC:10::27  | FD00:FFCC:10::/64  | Spoke  |
+| R27  | tun0  | ipv6  | FD00:FFCC:FFFF:10::27  | FD00:FFCC:10::/64  | Spoke  |
 | R27  | tun0  | ipv6 LL  | FE80::27  |  FE80::/10 | Spoke  |
 | R28  | tun0  | ipv4  | 192.168.10.28  | 192.168.10.0/24  | Spoke  |
-| R28  | tun0  | ipv6  | FD00:FFCC:10::28  | FD00:FFCC:10::/64  | Spoke  |
+| R28  | tun0  | ipv6  | FD00:FFCC:FFFF:10::28  | FD00:FFCC:10::/64  | Spoke  |
 | R28  | tun0  | ipv6 LL  | FE80::28  | FE80::/10  | Spoke  |
 
 <details>
