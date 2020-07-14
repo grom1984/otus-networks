@@ -201,7 +201,7 @@ int tun0
   ip nhrp map multicast dynamic
   ipv6 enable
   ipv6 address FE80::15 link-local
-  ipv6 address FD00:FFCC:10::15/64
+  ipv6 address FD00:FFCC:FFFF:10::15/64
   ##для phase 3
   #ip nhrp redirect
   no shutdown
@@ -222,7 +222,7 @@ int tun0
   tunnel source Ethernet0/0
   ipv6 enable
   ipv6 address FE80::27 link-local
-  ipv6 address FD00:FFCC:10::27/64
+  ipv6 address FD00:FFCC:FFFF:10::27/64
   #tunnel dest ip (в фазах 2-3 не нужен!)
   ##для phase 3
   ip nhrp shortcut
@@ -245,7 +245,7 @@ int tun0
   tunnel source Ethernet0/1
   ipv6 enable
   ipv6 address FE80::28 link-local
-  ipv6 address FD00:FFCC:10::28/64
+  ipv6 address FD00:FFCC:FFFF:10::28/64
   #tunnel dest ip (в фазах 2-3 не нужен!)
   ##для phase 3
   ip nhrp shortcut
