@@ -45,7 +45,7 @@ __tun14186__ туннель между роутерами R14-R18 GREv6
 | R15 | tun15186 | ipv6 LL | FE80:15 |  |  |
 | R18 | tun1518 | ipv4 | 192.168.0.6 | Ethernet0/3 | 77.77.77.115 |
 | R18 | tun15186 | ipv6 | FD00:FFCC:1518::1/127 | Ethernet0/3 | 2001:FFCC:1001:77:115 |
-| R18 | tun15186 | ipv6 LL |  |  |  |
+| R18 | tun15186 | ipv6 LL | FE80:18 |  |  |
 
 <details>
  <summary>Настройки GRE</summary>
@@ -203,7 +203,7 @@ int tun0
   ipv6 address FE80::15 link-local
   ipv6 address FD00:FFCC:FFFF:10::15/64
   ##для phase 3
-  #ip nhrp redirect
+  ip nhrp redirect
   no shutdown
 
 #####################
